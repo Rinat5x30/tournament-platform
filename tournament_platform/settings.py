@@ -28,7 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://tournament-platform-production.up.railway.app/"
+    "https://tournament-platform-production.up.railway.app"
 ]
 
 # Application definition
