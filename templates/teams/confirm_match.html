@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Подтверждение результата матча{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> 
+                        Подтверждение результата матча
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Информация о матче -->
+                    <div class="match-details text-center mb-4 p-4 bg-light rounded">
+                        <div class="row align-items-center">
+                            <div class="col-5 text-end">
+                                <h4>{{ match.team1.name }}</h4>
+                            </div>
+                            <div class="col-2">
+                                <h2 class="mb-0">
+                                    <span class="badge bg-dark">
+                                        {{ match.score_team1 }} : {{ match.score_team2 }}
+                                    </span>
+                                </h2>
+                            </div>
+                            <div class="col-5 text-start">
+                                <h4>{{ match.team2.name }}</h4>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <p class="mb-1">
+                                <i class="bi bi-trophy"></i> <strong>{{ match.tournament.name }}</strong>
+                            </p>
+                            <p class="mb-1 text-muted">
+                                <i class="bi bi-calendar"></i> {{ match.scheduled_time|date:"d F Y, H:i" }}
+                            </p>
+                            {% if match.stage %}
+                                <p class="mb-0 text-muted">
+                                    <i class="bi bi-flag"></i> {{ match.stage.name }} | Тур {{ match.round_number }}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Статус подтверждения -->
+                    <div class="alert alert-info mb-4">
+                        <h5 class="alert-heading">Статус подтверждения:</h5>
+                        <ul class="mb-0">
+                            <li>
+                                {{ match.team1.name }}: 
+                                {% if match.confirmed_by_team1 %}
+                                    <span class="badge bg-success">Подтверждено</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Ожидает</span>
+                                {% endif %}
+                            </li>
+                            <li>
+                                {{ match.team2.name }}: 
+                                {% if match.confirmed_by_team2 %}
+                                    <span class="badge bg-success">Подтверждено</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Ожидает</span>
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Ваша команда -->
+                    <div class="alert alert-primary">
+                        <i class="bi bi-shield-check"></i> 
+                        Вы подтверждаете результат от имени команды: <strong>{{ user_team.name }}</strong>
+                    </div>
+                    
+                    <!-- Форма подтверждения -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Комментарий (необязательно)</label>
+                            <textarea 
+                                class="form-control" 
+                                id="notes" 
+                                name="notes" 
+                                rows="3"
+                                placeholder="Укажите дополнительную информацию, если необходимо"
+                            ></textarea>
+                            <small class="form-text text-muted">
+                                Например: "Матч прошёл в хорошей атмосфере" или "Были технические проблемы"
+                            </small>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Внимание!</strong> После подтверждения результата обеими командами, 
+                            он будет считаться официальным и повлияет на рейтинг команд и игроков.
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning btn-lg">
+                                <i class="bi bi-check-circle"></i> Подтвердить результат
+                            </button>
+                            <a href="{% url 'teams:captain_dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

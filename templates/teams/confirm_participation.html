@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Подтверждение участия в турнире{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-trophy"></i> 
+                        Подтверждение участия в турнире
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Информация о турнире -->
+                    <div class="tournament-info mb-4 p-4 bg-light rounded">
+                        <h2 class="mb-3">{{ tournament.name }}</h2>
+                        
+                        {% if tournament.logo %}
+                            <div class="text-center mb-3">
+                                <img src="{{ tournament.logo.url }}" 
+                                     alt="{{ tournament.name }}" 
+                                     class="img-fluid rounded" 
+                                     style="max-height: 200px;">
+                            </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <i class="bi bi-calendar-event text-primary"></i>
+                                <strong>Начало:</strong> {{ tournament.start_date|date:"d.m.Y" }}
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <i class="bi bi-calendar-check text-success"></i>
+                                <strong>Окончание:</strong> 
+                                {% if tournament.end_date %}
+                                    {{ tournament.end_date|date:"d.m.Y" }}
+                                {% else %}
+                                    Не указано
+                                {% endif %}
+                            </div>
+                            {% if tournament.registration_end %}
+                                <div class="col-md-6 mb-2">
+                                    <i class="bi bi-clock text-warning"></i>
+                                    <strong>Регистрация до:</strong> {{ tournament.registration_end|date:"d.m.Y" }}
+                                </div>
+                            {% endif %}
+                            <div class="col-md-6 mb-2">
+                                <i class="bi bi-people text-info"></i>
+                                <strong>Участники:</strong> {{ tournament.participants.count }} / {{ tournament.max_teams }}
+                            </div>
+                        </div>
+                        
+                        {% if tournament.description %}
+                            <hr>
+                            <p class="mb-0">{{ tournament.description }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Информация о команде -->
+                    <div class="alert alert-primary">
+                        <div class="d-flex align-items-center">
+                            {% if team.logo %}
+                                <img src="{{ team.logo.url }}" 
+                                     alt="{{ team.name }}" 
+                                     class="rounded me-3" 
+                                     style="width: 50px; height: 50px; object-fit: cover;">
+                            {% endif %}
+                            <div>
+                                <h5 class="mb-0">{{ team.name }}</h5>
+                                <small>Вы подтверждаете участие этой команды</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Статус заявки -->
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-info-circle"></i> Статус заявки
+                        </h6>
+                        <p class="mb-0">
+                            {% if participant.is_confirmed %}
+                                <span class="badge bg-success">Подтверждено</span>
+                                Участие вашей команды уже подтверждено
+                            {% else %}
+                                <span class="badge bg-warning">Ожидает подтверждения</span>
+                                Ваша команда зарегистрирована, но участие требует подтверждения капитаном
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    {% if not participant.is_confirmed %}
+                        <!-- Форма подтверждения -->
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading">Что это значит?</h6>
+                                <ul class="mb-0">
+                                    <li>Подтвердив участие, вы обязуетесь участвовать во всех матчах турнира</li>
+                                    <li>Ваша команда будет включена в жеребьёвку и сетку турнира</li>
+                                    <li>Вы получите доступ к расписанию матчей</li>
+                                    <li>Неявка на матчи может привести к дисквалификации</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" type="checkbox" id="confirm_rules" required>
+                                <label class="form-check-label" for="confirm_rules">
+                                    Я подтверждаю, что ознакомился с правилами турнира и обязуюсь их соблюдать
+                                </label>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-info btn-lg">
+                                    <i class="bi bi-check-circle"></i> Подтвердить участие
+                                </button>
+                                <a href="{% url 'teams:captain_dashboard' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left"></i> Вернуться назад
+                                </a>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="d-grid">
+                            <a href="{% url 'teams:captain_dashboard' %}" class="btn btn-primary">
+                                <i class="bi bi-arrow-left"></i> Вернуться на панель
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

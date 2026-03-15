@@ -1,0 +1,74 @@
+<!-- Сохраните этот файл как: templates/tournaments/tournament_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}Все турниры | Tournament Platform{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>🏆 Все турниры</h1>
+</div>
+
+<div class="card">
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+        <div>
+            <label style="margin-right: 0.5rem;">Сезон:</label>
+            <select onchange="window.location.href='?season=' + this.value" style="padding: 0.5rem; border-radius: 5px; background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border);">
+                <option value="">Все сезоны</option>
+                {% for season in seasons %}
+                <option value="{{ season.id }}" {% if selected_season == season.id|stringformat:"s" %}selected{% endif %}>
+                    {{ season.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div>
+            <label style="margin-right: 0.5rem;">Статус:</label>
+            <select onchange="window.location.href='?status=' + this.value" style="padding: 0.5rem; border-radius: 5px; background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border);">
+                <option value="">Все статусы</option>
+                <option value="upcoming" {% if selected_status == 'upcoming' %}selected{% endif %}>Предстоящие</option>
+                <option value="registration" {% if selected_status == 'registration' %}selected{% endif %}>Регистрация</option>
+                <option value="ongoing" {% if selected_status == 'ongoing' %}selected{% endif %}>Идут</option>
+                <option value="finished" {% if selected_status == 'finished' %}selected{% endif %}>Завершённые</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
+    {% for tournament in tournaments %}
+    <div class="card" style="margin: 0;">
+        {% if tournament.logo %}
+        <img src="{{ tournament.logo.url }}" alt="{{ tournament.name }}" 
+             style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 1rem;">
+        {% endif %}
+        
+        <h3 style="margin-bottom: 0.5rem;">{{ tournament.name }}</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+            {{ tournament.season.name }}
+        </p>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <span style="background: var(--accent); padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">
+                {{ tournament.get_status_display }}
+            </span>
+            <span style="color: var(--text-secondary); font-size: 0.9rem;">
+                {{ tournament.start_date|date:"d.m.Y" }}
+            </span>
+        </div>
+        
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
+            {{ tournament.description|truncatewords:20 }}
+        </p>
+        
+        <a href="{% url 'tournaments:tournament_detail' tournament.slug %}" class="btn btn-primary" style="width: 100%;">
+            Подробнее →
+        </a>
+    </div>
+    {% empty %}
+    <div class="card">
+        <p style="color: var(--text-secondary); text-align: center;">Турниры не найдены</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,174 @@
+<!-- admin_panel/templates/admin_panel/zone_form.html -->
+{% extends 'base.html' %}
+
+{% block title %}{% if zone %}Редактировать{% else %}Создать{% endif %} зону таблицы | Админ-панель{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>{% if zone %}✏️ Редактировать зону{% else %}➕ Создать зону таблицы{% endif %}</h1>
+    <p style="color: var(--text-secondary);">
+        Стадия: <strong>{{ stage.name }}</strong> | 
+        Турнир: <strong>{{ stage.tournament.name }}</strong>
+    </p>
+</div>
+
+{% if form.errors %}
+<div class="card" style="background: #fee; border-left: 4px solid #c33;">
+    <h3 style="color: #c33; margin-top: 0;">❌ Ошибки в форме</h3>
+    <ul>
+        {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+                <li><strong>{{ field }}:</strong> {{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="id_name">Название зоны *</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <small style="color: #c33;">{{ form.name.errors.0 }}</small>
+            {% endif %}
+            <small style="color: var(--text-secondary); display: block; margin-top: 0.3rem;">
+                Например: "Выход в плей-офф", "Зона вылета"
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="id_zone_type">Тип зоны *</label>
+            {{ form.zone_type }}
+            {% if form.zone_type.errors %}
+                <small style="color: #c33;">{{ form.zone_type.errors.0 }}</small>
+            {% endif %}
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="id_start_position">Начальная позиция *</label>
+                {{ form.start_position }}
+                {% if form.start_position.errors %}
+                    <small style="color: #c33;">{{ form.start_position.errors.0 }}</small>
+                {% endif %}
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.3rem;">
+                    С какого места начинается зона (например: 1)
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label for="id_end_position">Конечная позиция *</label>
+                {{ form.end_position }}
+                {% if form.end_position.errors %}
+                    <small style="color: #c33;">{{ form.end_position.errors.0 }}</small>
+                {% endif %}
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.3rem;">
+                    По какое место (например: 8)
+                </small>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="id_color">Цвет зоны</label>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                {{ form.color }}
+                <span style="padding: 0.5rem 1rem; border-radius: 4px; background: var(--bg-secondary);">
+                    Предпросмотр цвета
+                </span>
+            </div>
+            {% if form.color.errors %}
+                <small style="color: #c33;">{{ form.color.errors.0 }}</small>
+            {% endif %}
+            <small style="color: var(--text-secondary); display: block; margin-top: 0.3rem;">
+                Цвет для выделения зоны в таблице
+            </small>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">
+                {% if zone %}💾 Сохранить{% else %}➕ Создать{% endif %}
+            </button>
+            <a href="{% url 'admin_panel:tournament_detail' stage.tournament.id %}" class="btn btn-secondary">
+                Отмена
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h3>ℹ️ Что такое зоны таблицы?</h3>
+    <p style="color: var(--text-secondary); line-height: 1.6;">
+        Зоны таблицы позволяют визуально выделять разные части турнирной таблицы:
+    </p>
+    <ul style="color: var(--text-secondary); line-height: 1.8;">
+        <li><strong>Выход в плей-офф</strong> — команды, которые проходят в следующую стадию</li>
+        <li><strong>Зона вылета</strong> — команды, которые вылетают из турнира</li>
+        <li><strong>Нейтральная зона</strong> — команды, которые остаются в турнире, но не проходят дальше</li>
+    </ul>
+</div>
+
+<style>
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    
+    .form-group input[type="color"] {
+        width: 80px;
+        height: 40px;
+        padding: 0.25rem;
+        cursor: pointer;
+    }
+    
+    .form-group small {
+        display: block;
+        margin-top: 0.3rem;
+    }
+</style>
+
+<script>
+    // Предпросмотр цвета
+    document.addEventListener('DOMContentLoaded', function() {
+        const colorInput = document.getElementById('id_color');
+        const preview = document.querySelector('.form-group span');
+        
+        if (colorInput && preview) {
+            function updatePreview() {
+                preview.style.background = colorInput.value;
+                preview.style.color = getContrastColor(colorInput.value);
+            }
+            
+            // Функция для определения контрастного цвета текста
+            function getContrastColor(hexColor) {
+                const r = parseInt(hexColor.substr(1, 2), 16);
+                const g = parseInt(hexColor.substr(3, 2), 16);
+                const b = parseInt(hexColor.substr(5, 2), 16);
+                const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                return brightness > 128 ? '#000' : '#fff';
+            }
+            
+            colorInput.addEventListener('input', updatePreview);
+            updatePreview(); // Инициализация
+        }
+    });
+</script>
+{% endblock %}

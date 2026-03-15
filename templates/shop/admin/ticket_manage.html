@@ -1,0 +1,654 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Тикет #{{ ticket.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 20px;
+    }
+    
+    .back-link:hover {
+        text-decoration: underline;
+    }
+    
+    .ticket-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .ticket-title h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin: 0 0 10px 0;
+    }
+    
+    .ticket-meta {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    
+    .badge {
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .badge-id { background: #e0e0e0; color: #333; }
+    .category-request { background: #e3f2fd; color: #1565c0; }
+    .category-complaint { background: #fff3e0; color: #e65100; }
+    .category-purchase { background: #f3e5f5; color: #7b1fa2; }
+    .priority-low { background: #e8f5e9; color: #2e7d32; }
+    .priority-medium { background: #fff3e0; color: #e65100; }
+    .priority-high { background: #ffebee; color: #c62828; }
+    
+    .status-badge {
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    
+    .status-new { background: #e8f5e9; color: #2e7d32; }
+    .status-in_progress { background: #e3f2fd; color: #1565c0; }
+    .status-resolved { background: #f5f5f5; color: #616161; }
+    .status-rejected { background: #ffebee; color: #c62828; }
+    
+    .deleted-banner {
+        background: #ffebee;
+        border: 1px solid #ef9a9a;
+        border-radius: 10px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .deleted-banner-text {
+        color: #c62828;
+        font-weight: 500;
+    }
+    
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 25px;
+    }
+    
+    .main-content {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    
+    .card-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .card-header h2 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1a1a2e;
+        margin: 0;
+    }
+    
+    .card-body {
+        padding: 20px;
+    }
+    
+    .description-text {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #333;
+        white-space: pre-wrap;
+    }
+    
+    /* Сообщения */
+    .messages-list {
+        max-height: 400px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .message-item {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .message-item.admin {
+        flex-direction: row-reverse;
+    }
+    
+    .message-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .message-item:not(.admin) .message-avatar {
+        background: #667eea;
+    }
+    
+    .message-item.admin .message-avatar {
+        background: #4caf50;
+    }
+    
+    .message-bubble {
+        max-width: 70%;
+        padding: 10px 15px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+    }
+    
+    .message-item:not(.admin) .message-bubble {
+        background: #f0f2f5;
+    }
+    
+    .message-item.admin .message-bubble {
+        background: #667eea;
+        color: white;
+    }
+    
+    .message-meta {
+        font-size: 0.75rem;
+        margin-top: 4px;
+        opacity: 0.7;
+    }
+    
+    /* Форма ответа */
+    .reply-form {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #f0f0f0;
+    }
+    
+    .reply-input {
+        flex: 1;
+        padding: 10px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        resize: none;
+    }
+    
+    .reply-input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .reply-btn {
+        padding: 10px 20px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    
+    .reply-btn:hover {
+        background: #764ba2;
+    }
+    
+    /* Сайдбар */
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .info-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.9rem;
+    }
+    
+    .info-label {
+        color: #888;
+    }
+    
+    .info-value {
+        font-weight: 500;
+        color: #1a1a2e;
+    }
+    
+    /* Формы действий */
+    .action-form {
+        margin-bottom: 15px;
+    }
+    
+    .form-group {
+        margin-bottom: 12px;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 5px;
+    }
+    
+    .form-select, .form-textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 0.9rem;
+    }
+    
+    .form-select:focus, .form-textarea:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .form-textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        width: 100%;
+        margin-bottom: 8px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .btn-success {
+        background: #4caf50;
+        color: white;
+    }
+    
+    .btn-danger {
+        background: #f44336;
+        color: white;
+    }
+    
+    .btn-warning {
+        background: #ff9800;
+        color: white;
+    }
+    
+    .btn-outline {
+        background: white;
+        color: #667eea;
+        border: 2px solid #667eea;
+    }
+    
+    .btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+    
+    /* Связанный заказ */
+    .order-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+    }
+    
+    .order-card-title {
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    
+    .order-card-meta {
+        font-size: 0.85rem;
+        color: #666;
+    }
+    
+    /* Логи */
+    .logs-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .log-item {
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.85rem;
+    }
+    
+    .log-item:last-child {
+        border-bottom: none;
+    }
+    
+    .log-action {
+        font-weight: 500;
+        color: #1a1a2e;
+    }
+    
+    .log-meta {
+        color: #888;
+        font-size: 0.8rem;
+        margin-top: 3px;
+    }
+    
+    @media (max-width: 900px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .sidebar {
+            order: -1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <a href="{% url 'shop:admin_tickets_list' %}" class="back-link">← Назад к списку тикетов</a>
+    
+    {% if ticket.is_deleted %}
+    <div class="deleted-banner">
+        <span class="deleted-banner-text">⚠️ Этот тикет удалён</span>
+        <form method="post" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="restore">
+            <button type="submit" class="btn btn-warning" style="width: auto; margin: 0;">Восстановить</button>
+        </form>
+    </div>
+    {% endif %}
+    
+    <div class="ticket-header">
+        <div class="ticket-title">
+            <h1>{{ ticket.subject }}</h1>
+            <div class="ticket-meta">
+                <span class="badge badge-id">#{{ ticket.id }}</span>
+                <span class="badge category-{{ ticket.category }}">
+                    {% if ticket.category == 'request' %}📝 Запрос
+                    {% elif ticket.category == 'complaint' %}⚠️ Жалоба
+                    {% elif ticket.category == 'purchase' %}🛒 Покупка
+                    {% endif %}
+                </span>
+                <span class="badge priority-{{ ticket.priority }}">
+                    {% if ticket.priority == 'high' %}🔴 Высокий
+                    {% elif ticket.priority == 'medium' %}🟡 Средний
+                    {% else %}🟢 Низкий
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        <span class="status-badge status-{{ ticket.status }}">
+            {% if ticket.status == 'new' %}🆕 Новый
+            {% elif ticket.status == 'in_progress' %}🔄 В работе
+            {% elif ticket.status == 'resolved' %}✅ Решён
+            {% elif ticket.status == 'rejected' %}❌ Отклонён
+            {% endif %}
+        </span>
+    </div>
+    
+    <div class="content-grid">
+        <div class="main-content">
+            <!-- Описание -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📄 Описание</h2>
+                </div>
+                <div class="card-body">
+                    <div class="description-text">{{ ticket.description }}</div>
+                </div>
+            </div>
+            
+            <!-- Сообщения -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>💬 Переписка</h2>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                    <div class="messages-list">
+                        {% for message in messages %}
+                        <div class="message-item {% if message.is_admin_message %}admin{% endif %}">
+                            <div class="message-avatar">
+                                {% if message.is_admin_message %}👨‍💼{% else %}👤{% endif %}
+                            </div>
+                            <div class="message-bubble">
+                                <div>{{ message.message }}</div>
+                                <div class="message-meta">
+                                    {{ message.author.username }} • {{ message.created_at|date:"d.m H:i" }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div style="text-align: center; color: #888; padding: 20px;">
+                        Нет сообщений
+                    </div>
+                    {% endif %}
+                    
+                    {% if not ticket.is_deleted and ticket.status != 'resolved' and ticket.status != 'rejected' %}
+                    <form method="post" class="reply-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="message">
+                        <textarea name="message" class="reply-input" placeholder="Написать ответ..." rows="1" required></textarea>
+                        <button type="submit" class="reply-btn">📤</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Логи -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📜 История</h2>
+                </div>
+                <div class="card-body">
+                    <div class="logs-list">
+                        {% for log in logs %}
+                        <div class="log-item">
+                            <div class="log-action">
+                                {% if log.action == 'create' %}📝 Тикет создан
+                                {% elif log.action == 'status_change' %}🔄 Статус: {{ log.old_value }} → {{ log.new_value }}
+                                {% elif log.action == 'assign' %}👤 Назначен: {{ log.new_value }}
+                                {% elif log.action == 'message' %}💬 Добавлено сообщение
+                                {% elif log.action == 'delete' %}🗑️ Удалён
+                                {% elif log.action == 'restore' %}♻️ Восстановлен
+                                {% else %}{{ log.action }}
+                                {% endif %}
+                            </div>
+                            <div class="log-meta">
+                                {% if log.performed_by %}{{ log.performed_by.username }}{% else %}Система{% endif %} • {{ log.created_at|date:"d.m.Y H:i" }}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div style="color: #888; text-align: center;">Нет записей</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Сайдбар -->
+        <div class="sidebar">
+            <!-- Информация -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📋 Информация</h2>
+                </div>
+                <div class="card-body">
+                    <div class="info-list">
+                        <div class="info-item">
+                            <span class="info-label">Автор</span>
+                            <span class="info-value">{{ ticket.user.username }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Создан</span>
+                            <span class="info-value">{{ ticket.created_at|date:"d.m.Y H:i" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Обновлён</span>
+                            <span class="info-value">{{ ticket.updated_at|date:"d.m.Y H:i" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Исполнитель</span>
+                            <span class="info-value">{% if ticket.assigned_to %}{{ ticket.assigned_to.username }}{% else %}—{% endif %}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Связанный заказ -->
+            {% if ticket.service_order %}
+            <div class="card">
+                <div class="card-header">
+                    <h2>📦 Заказ</h2>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'shop:admin_order_process' ticket.service_order.id %}" class="order-card" style="text-decoration: none; display: block;">
+                        <div class="order-card-title">{{ ticket.service_order.service.name }}</div>
+                        <div class="order-card-meta">
+                            Заказ #{{ ticket.service_order.id }} • {{ ticket.service_order.get_status_display }}
+                        </div>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Действия -->
+            {% if not ticket.is_deleted %}
+            <div class="card">
+                <div class="card-header">
+                    <h2>⚙️ Действия</h2>
+                </div>
+                <div class="card-body">
+                    <!-- Назначить -->
+                    <form method="post" class="action-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="assign">
+                        <div class="form-group">
+                            <label class="form-label">Назначить исполнителя</label>
+                            <select name="assigned_to" class="form-select">
+                                <option value="">Не назначен</option>
+                                {% for admin in admins %}
+                                <option value="{{ admin.id }}" {% if ticket.assigned_to_id == admin.id %}selected{% endif %}>{{ admin.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-outline">👤 Назначить</button>
+                    </form>
+                    
+                    <!-- Изменить приоритет -->
+                    <form method="post" class="action-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="priority">
+                        <div class="form-group">
+                            <label class="form-label">Приоритет</label>
+                            <select name="priority" class="form-select">
+                                <option value="low" {% if ticket.priority == 'low' %}selected{% endif %}>Низкий</option>
+                                <option value="medium" {% if ticket.priority == 'medium' %}selected{% endif %}>Средний</option>
+                                <option value="high" {% if ticket.priority == 'high' %}selected{% endif %}>Высокий</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-outline">🎯 Изменить</button>
+                    </form>
+                    
+                    {% if ticket.status != 'resolved' and ticket.status != 'rejected' %}
+                    <!-- Взять в работу -->
+                    {% if ticket.status == 'new' %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="take">
+                        <button type="submit" class="btn btn-primary">🔄 Взять в работу</button>
+                    </form>
+                    {% endif %}
+                    
+                    <!-- Решить -->
+                    <form method="post" class="action-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="resolve">
+                        <div class="form-group">
+                            <label class="form-label">Комментарий к решению</label>
+                            <textarea name="resolution_note" class="form-textarea" placeholder="Опционально..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success">✅ Решить</button>
+                    </form>
+                    
+                    <!-- Отклонить -->
+                    <form method="post" class="action-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="reject">
+                        <div class="form-group">
+                            <label class="form-label">Причина отклонения</label>
+                            <textarea name="rejection_reason" class="form-textarea" placeholder="Укажите причину..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger">❌ Отклонить</button>
+                    </form>
+                    {% endif %}
+                    
+                    <!-- Удалить -->
+                    <form method="post" onsubmit="return confirm('Удалить тикет? Он будет сохранён в архив.');">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <button type="submit" class="btn btn-danger">🗑️ Удалить</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

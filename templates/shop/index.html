@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+
+{% block title %}Магазин услуг{% endblock %}
+
+{% block extra_css %}
+<style>
+    .shop-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .shop-header h1 { font-size: 2rem; margin: 0 0 8px; }
+    .shop-header p { opacity: 0.9; margin: 0 0 20px; }
+    
+    .quick-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    
+    .quick-btn {
+        padding: 10px 20px;
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border-radius: 25px;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.3s;
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+    
+    .quick-btn:hover { background: rgba(255,255,255,0.3); transform: translateY(-2px); }
+    
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .section-title::before {
+        content: '';
+        width: 4px;
+        height: 20px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 2px;
+    }
+    
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    
+    .service-card {
+        background: var(--secondary-bg);
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid var(--border);
+        transition: all 0.3s;
+        text-decoration: none;
+        display: block;
+    }
+    
+    .service-card:hover { transform: translateY(-4px); border-color: #667eea; }
+    
+    .service-badges { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+    
+    .badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+    
+    .badge-featured { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+    .badge-auto { background: rgba(76,175,80,0.2); color: #4CAF50; }
+    .badge-manual { background: rgba(255,152,0,0.2); color: #ff9800; }
+    
+    .service-card h3 { color: var(--text-primary); font-size: 1rem; margin: 0 0 8px; }
+    .service-card p { color: var(--text-secondary); font-size: 13px; margin: 0 0 12px; line-height: 1.5; }
+    .service-card .link { color: #667eea; font-size: 13px; font-weight: 500; }
+    
+    .category-card {
+        background: var(--secondary-bg);
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        border: 1px solid var(--border);
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    
+    .category-card:hover { border-color: #667eea; transform: translateY(-2px); }
+    .category-card .icon { font-size: 2rem; margin-bottom: 8px; }
+    .category-card .name { color: var(--text-primary); font-weight: 600; margin-bottom: 4px; }
+    .category-card .count { color: var(--text-secondary); font-size: 13px; }
+    
+    .recent-card {
+        background: var(--secondary-bg);
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid var(--border);
+    }
+    
+    .recent-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .recent-item:last-child { border-bottom: none; }
+    .recent-item h4 { color: var(--text-primary); font-size: 14px; margin: 0 0 4px; }
+    .recent-item span { color: var(--text-secondary); font-size: 12px; }
+    
+    .status {
+        padding: 4px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .status-new { background: rgba(33,150,243,0.2); color: #2196F3; }
+    .status-in_progress { background: rgba(255,152,0,0.2); color: #ff9800; }
+    .status-resolved, .status-completed { background: rgba(76,175,80,0.2); color: #4CAF50; }
+    .status-rejected { background: rgba(244,67,54,0.2); color: #f44336; }
+    .status-pending { background: rgba(255,152,0,0.2); color: #ff9800; }
+    
+    .empty-state { text-align: center; padding: 30px; color: var(--text-secondary); }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 10px; opacity: 0.5; }
+    
+    .view-all {
+        display: block;
+        text-align: center;
+        padding: 12px;
+        color: #667eea;
+        text-decoration: none;
+        border-top: 1px solid var(--border);
+        margin-top: 12px;
+        font-weight: 500;
+    }
+    
+    .view-all:hover { color: #764ba2; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="shop-header">
+    <h1>🛒 Магазин услуг</h1>
+    <p>Услуги для лиги и игрового сервера</p>
+    <div class="quick-actions">
+        <a href="{% url 'shop:my_orders' %}" class="quick-btn">📦 Мои заказы</a>
+        <a href="{% url 'shop:my_tickets' %}" class="quick-btn">🎫 Мои тикеты</a>
+        <a href="{% url 'shop:service_list' %}" class="quick-btn">📋 Все услуги</a>
+        <a href="{% url 'shop:ticket_create' %}" class="quick-btn">➕ Создать тикет</a>
+    </div>
+</div>
+
+{% if featured_services %}
+<section>
+    <h2 class="section-title">Рекомендуемые услуги</h2>
+    <div class="grid-3">
+        {% for service in featured_services %}
+        <a href="{% url 'shop:service_detail' service.id %}" class="service-card">
+            <div class="service-badges">
+                <span class="badge badge-featured">⭐ Рекомендуем</span>
+                {% if service.processing_type == 'auto' %}
+                    <span class="badge badge-auto">⚡ Авто</span>
+                {% else %}
+                    <span class="badge badge-manual">👤 Вручную</span>
+                {% endif %}
+            </div>
+            <h3>{{ service.name }}</h3>
+            <p>{{ service.description|truncatewords:12 }}</p>
+            <span class="link">Подробнее →</span>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<section>
+    <h2 class="section-title">Категории</h2>
+    <div class="grid-3">
+        {% for category in categories %}
+        <a href="{% url 'shop:service_list' %}?category={{ category.slug }}" class="category-card">
+            <div class="icon">
+                {% if category.category_type == 'league' %}🏆{% elif category.category_type == 'server' %}🖥️{% else %}📁{% endif %}
+            </div>
+            <div class="name">{{ category.name }}</div>
+            <div class="count">{{ category.active_services_count }} услуг</div>
+        </a>
+        {% empty %}
+        <div class="empty-state">
+            <div class="icon">📂</div>
+            <p>Категории не созданы</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<div class="grid-2">
+    <div class="recent-card">
+        <h3 class="section-title">Последние заказы</h3>
+        {% for order in user_orders %}
+        <div class="recent-item">
+            <div>
+                <h4>{{ order.service.name }}</h4>
+                <span>{{ order.created_at|date:"d.m.Y H:i" }}</span>
+            </div>
+            <span class="status status-{{ order.status }}">{{ order.get_status_display }}</span>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="icon">📦</div>
+            <p>Нет заказов</p>
+        </div>
+        {% endfor %}
+        {% if user_orders %}<a href="{% url 'shop:my_orders' %}" class="view-all">Все заказы →</a>{% endif %}
+    </div>
+    
+    <div class="recent-card">
+        <h3 class="section-title">Последние тикеты</h3>
+        {% for ticket in user_tickets %}
+        <div class="recent-item">
+            <div>
+                <h4>#{{ ticket.id }}: {{ ticket.title|truncatewords:4 }}</h4>
+                <span>{{ ticket.created_at|date:"d.m.Y H:i" }}</span>
+            </div>
+            <span class="status status-{{ ticket.status }}">{{ ticket.get_status_display }}</span>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="icon">🎫</div>
+            <p>Нет тикетов</p>
+        </div>
+        {% endfor %}
+        {% if user_tickets %}<a href="{% url 'shop:my_tickets' %}" class="view-all">Все тикеты →</a>{% endif %}
+    </div>
+</div>
+{% endblock %}

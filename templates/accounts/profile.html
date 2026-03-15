@@ -1,0 +1,927 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Профиль - {{ profile_user.username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Профиль - основные стили */
+    .profile-page {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Кнопки редактирования */
+    .profile-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .btn-edit {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .btn-edit-primary {
+        background: linear-gradient(135deg, #e94560 0%, #c73e54 100%);
+        color: #fff;
+    }
+
+    .btn-edit-primary:hover {
+        background: linear-gradient(135deg, #ff5a7a 0%, #e94560 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+    }
+
+    .btn-edit-secondary {
+        background: var(--card-bg);
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+    }
+
+    .btn-edit-secondary:hover {
+        background: var(--border);
+        color: var(--text-primary);
+    }
+
+    .btn-edit-admin {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        color: #fff;
+    }
+
+    .btn-edit-admin:hover {
+        background: linear-gradient(135deg, #f5b041 0%, #f39c12 100%);
+        transform: translateY(-2px);
+    }
+
+    /* Шапка профиля */
+    .profile-header-card {
+        background: var(--secondary-bg);
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-header-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #e94560, var(--card-bg), #e94560);
+    }
+
+    .profile-header-content {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+    }
+
+    .profile-avatar-wrapper {
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .profile-avatar {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid #e94560;
+        box-shadow: 0 0 30px rgba(233, 69, 96, 0.3);
+    }
+
+    .profile-avatar-placeholder {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background: var(--card-bg);
+        border: 4px solid #e94560;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 56px;
+        color: var(--text-secondary);
+    }
+
+    .profile-main-info {
+        flex: 1;
+    }
+
+    .profile-username {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 8px 0;
+    }
+
+    .profile-discord {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #7289da;
+        font-size: 15px;
+        margin-bottom: 16px;
+    }
+
+    .profile-badges {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .badge-role {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+    }
+
+    .badge-team {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: #fff;
+    }
+
+    .badge-team:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(56, 239, 125, 0.3);
+    }
+
+    .profile-bio {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border);
+        color: var(--text-secondary);
+        font-size: 15px;
+        line-height: 1.7;
+    }
+
+    /* Статистика */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: var(--secondary-bg);
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        border: 1px solid var(--border);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(233, 69, 96, 0.3);
+    }
+
+    .stat-card.success { border-left: 4px solid #4CAF50; }
+    .stat-card.warning { border-left: 4px solid #ff9800; }
+    .stat-card.danger { border-left: 4px solid #f44336; }
+
+    .stat-value {
+        font-size: 42px;
+        font-weight: 700;
+        margin-bottom: 4px;
+        color: var(--text-primary);
+    }
+
+    .stat-card.success .stat-value { color: #4CAF50; }
+    .stat-card.warning .stat-value { color: #ff9800; }
+    .stat-card.danger .stat-value { color: #f44336; }
+
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    /* Карточки секций */
+    .section-card {
+        background: var(--secondary-bg);
+        border-radius: 12px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    .section-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--card-bg);
+    }
+
+    .section-header.primary {
+        background: linear-gradient(135deg, rgba(233, 69, 96, 0.2) 0%, rgba(233, 69, 96, 0.05) 100%);
+    }
+
+    .section-header.warning {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 193, 7, 0.05) 100%);
+    }
+
+    .section-header.danger {
+        background: linear-gradient(135deg, rgba(244, 67, 54, 0.3) 0%, rgba(244, 67, 54, 0.1) 100%);
+    }
+
+    .section-icon {
+        font-size: 24px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .section-count {
+        margin-left: auto;
+        background: var(--primary-bg);
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .section-body {
+        padding: 24px;
+    }
+
+    /* Рейтинг */
+    .rating-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+        align-items: center;
+    }
+
+    .rating-points {
+        text-align: center;
+    }
+
+    .rating-value {
+        font-size: 72px;
+        font-weight: 700;
+        color: #e94560;
+        line-height: 1;
+    }
+
+    .rating-label {
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin-top: 8px;
+    }
+
+    .rating-details p {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+        margin: 0;
+    }
+
+    .rating-details p:last-child {
+        border-bottom: none;
+    }
+
+    .rating-details strong {
+        color: var(--text-secondary);
+    }
+
+    .rating-details span {
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    /* Санкции */
+    .sanction-item {
+        background: rgba(244, 67, 54, 0.1);
+        border: 1px solid rgba(244, 67, 54, 0.3);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+
+    .sanction-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .sanction-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+
+    .sanction-badges {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .badge-sanction {
+        background: #f44336;
+        color: #fff;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .sanction-expires {
+        color: var(--text-secondary);
+        font-size: 13px;
+    }
+
+    .sanction-reason {
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .sanction-points {
+        color: #f44336;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .sanction-meta {
+        color: var(--text-secondary);
+        font-size: 13px;
+    }
+
+    .btn-appeal {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-appeal:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+    }
+
+    .sanction-footer {
+        padding: 16px 24px;
+        background: rgba(255, 193, 7, 0.1);
+        border-top: 1px solid rgba(255, 193, 7, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #f39c12;
+        font-size: 14px;
+    }
+
+    /* Достижения */
+    .award-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .award-item:last-child {
+        border-bottom: none;
+    }
+
+    .award-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .award-icon {
+        font-size: 28px;
+        color: #ffc107;
+    }
+
+    .award-name {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .award-meta {
+        color: var(--text-secondary);
+        font-size: 13px;
+    }
+
+    /* Матчи */
+    .match-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .match-item:last-child {
+        border-bottom: none;
+    }
+
+    .match-result-badge {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .match-result-badge.win {
+        background: linear-gradient(135deg, #4CAF50 0%, #81c784 100%);
+        color: #fff;
+    }
+
+    .match-result-badge.loss {
+        background: linear-gradient(135deg, #f44336 0%, #e57373 100%);
+        color: #fff;
+    }
+
+    .match-result-badge.draw {
+        background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
+        color: #fff;
+    }
+
+    .match-info {
+        flex: 1;
+    }
+
+    .match-teams {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .match-teams .score {
+        color: #e94560;
+        margin: 0 8px;
+    }
+
+    .match-tournament {
+        color: var(--text-secondary);
+        font-size: 13px;
+    }
+
+    .match-stats {
+        display: flex;
+        gap: 8px;
+    }
+
+    .match-stat {
+        background: var(--card-bg);
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 13px;
+        color: var(--text-primary);
+    }
+
+    .match-stat.goals {
+        background: rgba(233, 69, 96, 0.2);
+        color: #e94560;
+    }
+
+    .match-stat.assists {
+        background: rgba(33, 150, 243, 0.2);
+        color: #2196F3;
+    }
+
+    /* Таблицы */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th {
+        text-align: left;
+        padding: 14px 16px;
+        background: var(--card-bg);
+        color: #e94560;
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .data-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text-primary);
+    }
+
+    .data-table tr:hover td {
+        background: var(--card-bg);
+    }
+
+    .data-table a {
+        color: #e94560;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .data-table a:hover {
+        color: #ff6b8a;
+    }
+
+    .badge-small {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-success {
+        background: rgba(76, 175, 80, 0.2);
+        color: #4CAF50;
+    }
+
+    .badge-secondary {
+        background: var(--card-bg);
+        color: var(--text-secondary);
+    }
+
+    .badge-warning-small {
+        background: rgba(255, 193, 7, 0.2);
+        color: #e6a700;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+    <!-- Кнопки редактирования -->
+    <div class="profile-actions">
+        {% if is_own_profile %}
+            <a href="{% url 'accounts:profile_edit' %}" class="btn-edit btn-edit-primary">
+                ✏️ Редактировать профиль
+            </a>
+            <a href="{% url 'accounts:change_password' %}" class="btn-edit btn-edit-secondary">
+                🔑 Сменить пароль
+            </a>
+        {% elif request.user.is_authenticated and request.user.is_staff or request.user.role == 'admin' %}
+            <a href="{% url 'admin_panel:player_edit' profile_user.id %}" class="btn-edit btn-edit-admin">
+                🛡️ Редактировать (Админ)
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Шапка профиля -->
+    <div class="profile-header-card">
+        <div class="profile-header-content">
+            <div class="profile-avatar-wrapper">
+                {% if profile_user.avatar %}
+                    <img src="{{ profile_user.avatar.url }}" 
+                         alt="{{ profile_user.username }}" 
+                         class="profile-avatar">
+                {% else %}
+                    <div class="profile-avatar-placeholder">👤</div>
+                {% endif %}
+            </div>
+            
+            <div class="profile-main-info">
+                <h1 class="profile-username">{{ profile_user.username }}</h1>
+                
+                {% if profile_user.discord_username %}
+                    <div class="profile-discord">
+                        <span>🎮</span> {{ profile_user.discord_username }}
+                    </div>
+                {% endif %}
+                
+                <div class="profile-badges">
+                    <span class="badge badge-role">{{ profile_user.get_role_display }}</span>
+                    {% if current_team %}
+                        <a href="{% url 'teams:team_detail' current_team.team.slug %}" class="badge badge-team">
+                            🛡️ {{ current_team.team.name }}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        {% if profile_user.bio %}
+            <div class="profile-bio">{{ profile_user.bio }}</div>
+        {% endif %}
+    </div>
+
+    <!-- Статистика матчей -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_matches }}</div>
+            <div class="stat-label">Матчей</div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-value">{{ wins }}</div>
+            <div class="stat-label">Побед</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-value">{{ draws }}</div>
+            <div class="stat-label">Ничьих</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="stat-value">{{ losses }}</div>
+            <div class="stat-label">Поражений</div>
+        </div>
+    </div>
+
+    <!-- Статистика игровая -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_goals }}</div>
+            <div class="stat-label">⚽ Голов</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_assists }}</div>
+            <div class="stat-label">🎯 Передач</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_saves }}</div>
+            <div class="stat-label">🧤 Сейвов</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_shots }}</div>
+            <div class="stat-label">🎯 Ударов</div>
+        </div>
+    </div>
+
+    <!-- Рейтинг -->
+    {% if player_rating %}
+    <div class="section-card">
+        <div class="section-header primary">
+            <span class="section-icon">⭐</span>
+            <h3 class="section-title">Рейтинг</h3>
+        </div>
+        <div class="section-body">
+            <div class="rating-content">
+                <div class="rating-points">
+                    <div class="rating-value">{{ player_rating.rating_points }}</div>
+                    <div class="rating-label">Очков рейтинга</div>
+                </div>
+                <div class="rating-details">
+                    <p>
+                        <strong>Позиция в рейтинге</strong>
+                        <span>#{{ player_rating.rank }}</span>
+                    </p>
+                    <p>
+                        <strong>Процент побед</strong>
+                        <span>
+                            {% if total_matches > 0 %}
+                                {% widthratio wins total_matches 100 %}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Активные санкции -->
+    {% if is_own_profile and active_sanctions %}
+    <div class="section-card">
+        <div class="section-header danger">
+            <span class="section-icon">⚠️</span>
+            <h3 class="section-title">Мои активные санкции</h3>
+            <span class="section-count">{{ active_sanctions|length }}</span>
+        </div>
+        <div class="section-body">
+            {% for sanction in active_sanctions %}
+            <div class="sanction-item">
+                <div class="sanction-header">
+                    <div class="sanction-badges">
+                        <span class="badge-sanction">{{ sanction.get_sanction_type_display }}</span>
+                        {% if sanction.expires_at %}
+                            <span class="sanction-expires">До {{ sanction.expires_at|date:"d.m.Y" }}</span>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'teams:submit_appeal' sanction.id %}" class="btn-appeal">
+                        📝 Подать апелляцию
+                    </a>
+                </div>
+                
+                <p class="sanction-reason"><strong>Причина:</strong> {{ sanction.reason }}</p>
+                
+                {% if sanction.points_deducted > 0 %}
+                    <p class="sanction-points">📉 Снято очков: {{ sanction.points_deducted }}</p>
+                {% endif %}
+                
+                <p class="sanction-meta">
+                    Выдана: {{ sanction.issued_at|date:"d.m.Y" }} • {{ sanction.tournament.name }}
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="sanction-footer">
+            <span>ℹ️</span>
+            <span>Вы можете подать апелляцию на любую санкцию. Рассмотрение занимает 3-5 дней.</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Достижения -->
+    {% if awards %}
+    <div class="section-card">
+        <div class="section-header warning">
+            <span class="section-icon">🏆</span>
+            <h3 class="section-title">Достижения</h3>
+            <span class="section-count">{{ awards|length }}</span>
+        </div>
+        <div class="section-body">
+            {% for award in awards %}
+            <div class="award-item">
+                <div class="award-info">
+                    <span class="award-icon">🏅</span>
+                    <div>
+                        <div class="award-name">{{ award.get_award_type_display }}</div>
+                        <div class="award-meta">{{ award.tournament.name }} • {{ award.awarded_at|date:"d.m.Y" }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Последние матчи -->
+    {% if recent_matches %}
+    <div class="section-card">
+        <div class="section-header">
+            <span class="section-icon">📅</span>
+            <h3 class="section-title">Последние матчи</h3>
+        </div>
+        <div class="section-body">
+            {% for match_data in recent_matches %}
+            <div class="match-item">
+                <div class="match-result-badge {% if match_data.result == 'win' %}win{% elif match_data.result == 'loss' %}loss{% else %}draw{% endif %}">
+                    {% if match_data.result == 'win' %}П{% elif match_data.result == 'loss' %}ПР{% else %}Н{% endif %}
+                </div>
+                
+                <div class="match-info">
+                    <div class="match-teams">
+                        {{ match_data.match.team1.name }}
+                        <span class="score">{{ match_data.match.score_team1 }} : {{ match_data.match.score_team2 }}</span>
+                        {{ match_data.match.team2.name }}
+                    </div>
+                    <div class="match-tournament">
+                        {{ match_data.match.tournament.name }} • {{ match_data.match.scheduled_time|date:"d.m.Y" }}
+                    </div>
+                </div>
+                
+                {% if match_data.stats %}
+                <div class="match-stats">
+                    <span class="match-stat goals">⚽ {{ match_data.stats.goals }}</span>
+                    <span class="match-stat assists">🎯 {{ match_data.stats.assists }}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Карьера по сезонам -->
+    {% if career_by_season %}
+    <div class="section-card">
+        <div class="section-header">
+            <span class="section-icon">📈</span>
+            <h3 class="section-title">Карьера по сезонам</h3>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Сезон</th>
+                    <th>Матчи</th>
+                    <th>Голы</th>
+                    <th>Передачи</th>
+                    <th>Рейтинг</th>
+                    <th>Награды</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for season_data in career_by_season %}
+                <tr>
+                    <td><strong>{{ season_data.season.name }}</strong></td>
+                    <td>{{ season_data.matches }}</td>
+                    <td>{{ season_data.goals }}</td>
+                    <td>{{ season_data.assists }}</td>
+                    <td>
+                        {% if season_data.rating %}
+                            {{ season_data.rating.rating_points }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if season_data.awards %}
+                            <span class="badge-small badge-warning-small">{{ season_data.awards|length }}</span>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- История команд -->
+    {% if team_history %}
+    <div class="section-card">
+        <div class="section-header">
+            <span class="section-icon">🕐</span>
+            <h3 class="section-title">История команд</h3>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Команда</th>
+                    <th>Роль</th>
+                    <th>Номер</th>
+                    <th>Период</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for membership in team_history %}
+                <tr>
+                    <td>
+                        <a href="{% url 'teams:team_detail' membership.team.slug %}">
+                            {{ membership.team.name }}
+                        </a>
+                    </td>
+                    <td>{{ membership.get_role_display }}</td>
+                    <td>
+                        {% if membership.jersey_number %}
+                            #{{ membership.jersey_number }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ membership.joined_date|date:"d.m.Y" }}
+                        {% if membership.left_date %}
+                            — {{ membership.left_date|date:"d.m.Y" }}
+                        {% else %}
+                            — настоящее время
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if membership.is_active %}
+                            <span class="badge-small badge-success">Активен</span>
+                        {% else %}
+                            <span class="badge-small badge-secondary">Неактивен</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

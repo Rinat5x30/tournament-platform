@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Генерация плей-офф - {{ stage.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <h1>🏆 Генерация сетки плей-офф</h1>
+        <p style="color: var(--text-secondary);">
+            Стадия: <strong>{{ stage.name }}</strong> | Турнир: <strong>{{ stage.tournament.name }}</strong>
+        </p>
+        
+        <hr>
+        
+        <div class="alert alert-info">
+            <strong>ℹ️ Информация:</strong>
+            <ul>
+                <li>Тип: {{ stage.get_stage_type_display }}</li>
+                <li>Участников: {{ stage.tournament.participants.count }}</li>
+                <li>{% if stage.advance_count %}Проходят команд: {{ stage.advance_count }}{% else %}Все участники{% endif %}</li>
+            </ul>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="alert alert-warning">
+                <strong>⚠️ Внимание:</strong> Генерация создаст сетку плей-офф. 
+                Команды будут распределены по сидам.
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'admin_panel:tournament_detail' stage.tournament.id %}" class="btn btn-secondary">
+                    Отмена
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    🏆 Сгенерировать сетку
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

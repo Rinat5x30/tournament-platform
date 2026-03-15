@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ team.name }}{% endblock %}
+
+{% block content %}
+<!-- Шапка команды -->
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 1.5rem;">
+            {% if team.logo %}
+            <img src="{{ team.logo.url }}" 
+                 style="width: 100px; height: 100px; border-radius: 15px; object-fit: cover;" 
+                 alt="{{ team.name }}">
+            {% else %}
+            <div style="width: 100px; height: 100px; border-radius: 15px; background: var(--secondary-bg); display: flex; align-items: center; justify-content: center; font-size: 2.5rem;">
+                👥
+            </div>
+            {% endif %}
+            <div>
+                <h1 style="margin-bottom: 0.5rem;">
+                    {{ team.name }}
+                    {% if team.tag %}
+                        <span style="color: var(--text-secondary); font-size: 0.8em;">[{{ team.tag }}]</span>
+                    {% endif %}
+                </h1>
+                {% if team.captain %}
+                <p style="color: var(--text-secondary); margin: 0;">
+                    👑 Капитан: 
+                    <a href="{% url 'accounts:profile' team.captain.username %}" 
+                       style="color: var(--accent); text-decoration: none;">
+                        {{ team.captain.username }}
+                    </a>
+                </p>
+                {% endif %}
+                {% if team.founded_date %}
+                <p style="color: var(--text-secondary); margin-top: 0.3rem;">
+                    📅 Основана: {{ team.founded_date|date:"d.m.Y" }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Кнопка редактирования (только для админов) -->
+        {% if is_admin %}
+        <a href="{% url 'admin_panel:team_edit' team.id %}" 
+           class="btn btn-primary">
+            ✏️ Редактировать
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Статистика -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+    <div class="card" style="text-align: center;">
+        <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Участников</div>
+        <div style="font-size: 2.5rem; font-weight: bold; color: var(--accent);">
+            {{ stats.total_members }}
+        </div>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Матчей сыграно</div>
+        <div style="font-size: 2.5rem; font-weight: bold; color: var(--accent);">
+            {{ stats.matches_played }}
+        </div>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Побед</div>
+        <div style="font-size: 2.5rem; font-weight: bold; color: #4CAF50;">
+            {{ stats.wins }}
+        </div>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Турниров</div>
+        <div style="font-size: 2.5rem; font-weight: bold; color: var(--accent);">
+            {{ stats.tournaments }}
+        </div>
+    </div>
+</div>
+
+<!-- Описание команды -->
+{% if team.description %}
+<div class="card">
+    <h2 style="color: var(--accent); margin-bottom: 1rem;">📖 О команде</h2>
+    <p style="color: var(--text-secondary); line-height: 1.6;">{{ team.description }}</p>
+</div>
+{% endif %}
+
+<!-- Состав команды -->
+<div class="card">
+    <h2 style="color: var(--accent); margin-bottom: 1.5rem;">
+        👥 Состав команды
+        <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: normal;">
+            ({{ members|length }} участников)
+        </span>
+    </h2>
+    
+    {% if members %}
+    <div style="display: grid; gap: 1rem;">
+        {% for member in members %}
+        <div style="background: var(--secondary-bg); padding: 1rem; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                {% if member.jersey_number %}
+                <div style="width: 50px; height: 50px; background: var(--accent); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem;">
+                    #{{ member.jersey_number }}
+                </div>
+                {% else %}
+                <div style="width: 50px; height: 50px; background: var(--card-bg); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                    👤
+                </div>
+                {% endif %}
+                
+                <div>
+                    <a href="{% url 'accounts:profile' member.player.username %}" 
+                       style="color: var(--text-primary); text-decoration: none; font-weight: bold; font-size: 1.1rem;">
+                        {{ member.player.username }}
+                    </a>
+                    {% if member.player == team.captain %}
+                        <span style="background: #FFD700; color: #000; padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.75rem; margin-left: 0.5rem;">
+                            👑 Капитан
+                        </span>
+                    {% endif %}
+                    <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.3rem;">
+                        {{ member.get_role_display }} • В команде с {{ member.joined_date|date:"d.m.Y" }}
+                    </div>
+                </div>
+            </div>
+            
+            {% if member.is_active %}
+            <span style="background: #4CAF50; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; color: white;">
+                ✓ Активен
+            </span>
+            {% else %}
+            <span style="background: #757575; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; color: white;">
+                Покинул
+            </span>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">😔</div>
+        <p>В команде пока нет игроков</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Кнопка назад -->
+<div style="margin-top: 2rem;">
+    <a href="{% url 'teams:team_list' %}" class="btn btn-secondary">
+        ← Вернуться к списку команд
+    </a>
+</div>
+{% endblock %}

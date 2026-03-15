@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Поиск: {{ query }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="bi bi-search"></i> Результаты поиска
+            </h1>
+            
+            <!-- Форма поиска -->
+            <form method="get" action="{% url 'tournaments:search' %}" class="mb-4">
+                <div class="input-group input-group-lg">
+                    <input 
+                        type="text" 
+                        name="q" 
+                        class="form-control" 
+                        placeholder="Поиск турниров, команд, игроков..." 
+                        value="{{ query }}"
+                        autofocus
+                    >
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-search"></i> Найти
+                    </button>
+                </div>
+            </form>
+            
+            {% if query %}
+                {% if total_results > 0 %}
+                    <p class="text-muted mb-4">
+                        Найдено результатов: <strong>{{ total_results }}</strong> по запросу "<strong>{{ query }}</strong>"
+                    </p>
+                    
+                    <!-- Турниры -->
+                    {% if results.tournaments %}
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h4 class="mb-0">
+                                    <i class="bi bi-trophy"></i> Турниры ({{ results.tournaments|length }})
+                                </h4>
+                            </div>
+                            <div class="list-group list-group-flush">
+                                {% for tournament in results.tournaments %}
+                                    <a href="{% url 'tournaments:tournament_detail' tournament.slug %}" 
+                                       class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-1">{{ tournament.name }}</h5>
+                                                <p class="mb-1 text-muted">
+                                                    <small>
+                                                        <i class="bi bi-calendar"></i> {{ tournament.start_date|date:"d.m.Y" }}
+                                                        {% if tournament.season %}
+                                                            | {{ tournament.season.name }}
+                                                        {% endif %}
+                                                    </small>
+                                                </p>
+                                            </div>
+                                            <span class="badge bg-{{ tournament.status|yesno:'success,warning,secondary' }}">
+                                                {{ tournament.get_status_display }}
+                                            </span>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Команды -->
+                    {% if results.teams %}
+                        <div class="card mb-4">
+                            <div class="card-header bg-success text-white">
+                                <h4 class="mb-0">
+                                    <i class="bi bi-people"></i> Команды ({{ results.teams|length }})
+                                </h4>
+                            </div>
+                            <div class="list-group list-group-flush">
+                                {% for team in results.teams %}
+                                    <a href="{% url 'teams:team_detail' team.slug %}" 
+                                       class="list-group-item list-group-item-action">
+                                        <div class="d-flex align-items-center">
+                                            {% if team.logo %}
+                                                <img src="{{ team.logo.url }}" 
+                                                     alt="{{ team.name }}" 
+                                                     class="rounded me-3" 
+                                                     style="width: 50px; height: 50px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-secondary text-white rounded me-3 d-flex align-items-center justify-content-center" 
+                                                     style="width: 50px; height: 50px;">
+                                                    <i class="bi bi-shield"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <h5 class="mb-1">
+                                                    {{ team.name }}
+                                                    {% if team.tag %}
+                                                        <span class="badge bg-secondary">{{ team.tag }}</span>
+                                                    {% endif %}
+                                                </h5>
+                                                {% if team.captain %}
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-person"></i> Капитан: {{ team.captain.username }}
+                                                    </small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Игроки -->
+                    {% if results.players %}
+                        <div class="card mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h4 class="mb-0">
+                                    <i class="bi bi-person"></i> Игроки ({{ results.players|length }})
+                                </h4>
+                            </div>
+                            <div class="list-group list-group-flush">
+                                {% for player in results.players %}
+                                    <a href="{% url 'accounts:profile' player.username %}" 
+                                       class="list-group-item list-group-item-action">
+                                        <div class="d-flex align-items-center">
+                                            {% if player.avatar %}
+                                                <img src="{{ player.avatar.url }}" 
+                                                     alt="{{ player.username }}" 
+                                                     class="rounded-circle me-3" 
+                                                     style="width: 50px; height: 50px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-secondary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" 
+                                                     style="width: 50px; height: 50px;">
+                                                    <i class="bi bi-person"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <h5 class="mb-1">{{ player.username }}</h5>
+                                                <small class="text-muted">
+                                                    {% if player.discord_username %}
+                                                        <i class="bi bi-discord"></i> {{ player.discord_username }}
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        По запросу "<strong>{{ query }}</strong>" ничего не найдено.
+                        Попробуйте изменить запрос или использовать другие ключевые слова.
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-secondary">
+                    <i class="bi bi-search"></i>
+                    Введите запрос для поиска турниров, команд или игроков
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

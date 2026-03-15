@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Управление составом - {{ team.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Управление составом: {{ team.name }}</h1>
+    
+    <div class="row">
+        <!-- Текущий состав -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Текущий состав</h4>
+                </div>
+                <div class="card-body">
+                    {% if members %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Игрок</th>
+                                        <th>Роль</th>
+                                        <th>Номер</th>
+                                        <th>С</th>
+                                        <th>Статус</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for member in members %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'accounts:profile' member.player.username %}">
+                                                {{ member.player.username }}
+                                            </a>
+                                            {% if member.player == team.captain %}
+                                                <span class="badge bg-warning">Капитан</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ member.get_role_display }}</td>
+                                        <td>{{ member.jersey_number|default:"-" }}</td>
+                                        <td>{{ member.joined_date|date:"d.m.Y" }}</td>
+                                        <td>
+                                            {% if member.is_active %}
+                                                <span class="badge bg-success">Активен</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Неактивен</span>
+                                                <br><small>До: {{ member.left_date|date:"d.m.Y" }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if member.is_active and member.player != team.captain %}
+                                                <a href="{% url 'teams:remove_team_member' member.id %}" 
+                                                   class="btn btn-sm btn-danger"
+                                                   onclick="return confirm('Удалить {{ member.player.username }} из команды?')">
+                                                    Удалить
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">В команде пока нет игроков</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Добавление игрока -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4>Добавить игрока</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'teams:add_team_member' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="player_id" class="form-label">Игрок *</label>
+                            <select name="player_id" id="player_id" class="form-select" required>
+                                <option value="">Выберите игрока</option>
+                                {% for player in available_players %}
+                                    <option value="{{ player.id }}">{{ player.username }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if not available_players %}
+                                <small class="text-muted">Все игроки уже в командах</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="role" class="form-label">Роль</label>
+                            <select name="role" id="role" class="form-select">
+                                <option value="player">Игрок</option>
+                                <option value="substitute">Запасной</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="jersey_number" class="form-label">Номер (необязательно)</label>
+                            <input type="number" name="jersey_number" id="jersey_number" 
+                                   class="form-control" min="0" max="99">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success w-100" 
+                                {% if not available_players %}disabled{% endif %}>
+                            Добавить игрока
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <a href="{% url 'teams:captain_dashboard' %}" class="btn btn-secondary w-100">
+                    Вернуться к панели
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

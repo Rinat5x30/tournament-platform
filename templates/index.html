@@ -1,0 +1,70 @@
+<!-- templates/index.html -->
+{% extends 'base.html' %}
+
+{% block title %}Главная | Tournament Platform{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1 style="margin-bottom: 1rem;">Добро пожаловать на Tournament Platform</h1>
+    {% if active_season %}
+    <p style="color: var(--text-secondary);">Текущий сезон: <strong>{{ active_season.name }}</strong></p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2 class="card-title">Актуальные турниры</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+        {% for tournament in upcoming_tournaments %}
+        <div style="background: var(--card-bg); padding: 1.5rem; border-radius: 8px;">
+            {% if tournament.logo %}
+            <img src="{{ tournament.logo.url }}" alt="{{ tournament.name }}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px; margin-bottom: 1rem;">
+            {% endif %}
+            <h3 style="margin-bottom: 0.5rem;">{{ tournament.name }}</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
+                {{ tournament.description|truncatewords:15 }}
+            </p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="background: var(--accent); padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">
+                    {{ tournament.get_status_display }}
+                </span>
+                <a href="{% url 'tournaments:tournament_detail' tournament.slug %}" class="btn btn-primary">
+                    Подробнее
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <p style="color: var(--text-secondary);">Нет активных турниров</p>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <h2 class="card-title">Последние матчи</h2>
+    {% for match in latest_matches %}
+    <div class="match-card">
+        <div class="match-team">
+            {% if match.team1.logo %}
+            <img src="{{ match.team1.logo.url }}" class="team-logo" alt="{{ match.team1.name }}">
+            {% endif %}
+            <span>{{ match.team1.name }}</span>
+        </div>
+        <div>
+            <div class="match-score">{{ match.score_team1 }} : {{ match.score_team2 }}</div>
+            <div class="match-time">
+                {{ match.tournament.name }}<br>
+                {{ match.scheduled_time|date:"d.m.Y H:i" }}
+            </div>
+        </div>
+        <div class="match-team away">
+            {% if match.team2.logo %}
+            <img src="{{ match.team2.logo.url }}" class="team-logo" alt="{{ match.team2.name }}">
+            {% endif %}
+            <span>{{ match.team2.name }}</span>
+        </div>
+    </div>
+    {% empty %}
+    <p style="color: var(--text-secondary);">Нет завершённых матчей</p>
+    {% endfor %}
+</div>
+{% endblock %}
+

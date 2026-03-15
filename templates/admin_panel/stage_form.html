@@ -1,0 +1,177 @@
+<!-- admin_panel/stage_form.html -->
+{% extends 'base.html' %}
+
+{% block title %}{% if stage %}Редактировать{% else %}Создать{% endif %} стадию | Админ-панель{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>{% if stage %}✏️ Редактировать стадию{% else %}➕ Создать стадию{% endif %}</h1>
+    <p style="color: var(--text-secondary);">Турнир: <strong>{{ tournament.name }}</strong></p>
+</div>
+
+{% if form.errors %}
+<div class="card" style="background: #fee; border-left: 4px solid #c33;">
+    <h3 style="color: #c33; margin-top: 0;">❌ Ошибки в форме</h3>
+    <ul>
+        {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+                <li><strong>{{ field }}:</strong> {{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="id_name">Название стадии *</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <small style="color: #c33;">{{ form.name.errors.0 }}</small>
+            {% endif %}
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="id_stage_type">Тип стадии *</label>
+                {{ form.stage_type }}
+                {% if form.stage_type.errors %}
+                    <small style="color: #c33;">{{ form.stage_type.errors.0 }}</small>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_order">Порядок *</label>
+                {{ form.order }}
+                {% if form.order.errors %}
+                    <small style="color: #c33;">{{ form.order.errors.0 }}</small>
+                {% endif %}
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.3rem;">
+                    Порядок следования стадий (1, 2, 3...)
+                </small>
+            </div>
+        </div>
+
+        <!-- Поля для швейцарской системы -->
+        <div id="swiss-fields" style="display: none;">
+            <div class="form-group">
+                <label for="id_swiss_rounds">Количество раундов (Швейцарская система)</label>
+                {{ form.swiss_rounds }}
+                {% if form.swiss_rounds.errors %}
+                    <small style="color: #c33;">{{ form.swiss_rounds.errors.0 }}</small>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Поля для групповой системы -->
+        <div id="group-fields" style="display: none;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="id_groups_count">Количество групп</label>
+                    {{ form.groups_count }}
+                    {% if form.groups_count.errors %}
+                        <small style="color: #c33;">{{ form.groups_count.errors.0 }}</small>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_teams_per_group">Команд в группе</label>
+                    {{ form.teams_per_group }}
+                    {% if form.teams_per_group.errors %}
+                        <small style="color: #c33;">{{ form.teams_per_group.errors.0 }}</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Тайбрейкеры -->
+        <div class="form-group">
+            <h3>Критерии разделения мест</h3>
+            <small style="color: var(--text-secondary); display: block; margin-bottom: 1rem;">
+                Определяют порядок команд при равенстве очков
+            </small>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label for="id_tiebreaker_1">Критерий 1</label>
+                    {{ form.tiebreaker_1 }}
+                </div>
+                <div>
+                    <label for="id_tiebreaker_2">Критерий 2</label>
+                    {{ form.tiebreaker_2 }}
+                </div>
+                <div>
+                    <label for="id_tiebreaker_3">Критерий 3</label>
+                    {{ form.tiebreaker_3 }}
+                </div>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">
+                {% if stage %}💾 Сохранить{% else %}➕ Создать{% endif %}
+            </button>
+            <a href="{% url 'admin_panel:tournament_detail' tournament.id %}" class="btn btn-secondary">
+                Отмена
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    
+    .form-group small {
+        display: block;
+        margin-top: 0.3rem;
+    }
+</style>
+
+<script>
+    // Показываем/скрываем поля в зависимости от типа стадии
+    document.addEventListener('DOMContentLoaded', function() {
+        const stageTypeSelect = document.getElementById('id_stage_type');
+        const swissFields = document.getElementById('swiss-fields');
+        const groupFields = document.getElementById('group-fields');
+        
+        function updateFields() {
+            const value = stageTypeSelect.value;
+            
+            // Скрываем все дополнительные поля
+            swissFields.style.display = 'none';
+            groupFields.style.display = 'none';
+            
+            // Показываем нужные поля
+            if (value === 'swiss') {
+                swissFields.style.display = 'block';
+            } else if (value === 'group') {
+                groupFields.style.display = 'block';
+            }
+        }
+        
+        stageTypeSelect.addEventListener('change', updateFields);
+        updateFields(); // Инициализация при загрузке
+    });
+</script>
+{% endblock %}

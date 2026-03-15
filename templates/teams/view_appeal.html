@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Апелляция #{{ appeal.id }}{% endblock %}
+
+{% block content %}
+<style>
+    .container {
+        display: block !important;
+        max-width: 900px !important;
+    }
+    
+    .sidebar {
+        display: none !important;
+    }
+</style>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>📝 Апелляция #{{ appeal.id }}</h1>
+        <a href="{% url 'teams:captain_dashboard' %}" class="btn btn-secondary">
+            ← Назад к панели
+        </a>
+    </div>
+</div>
+
+<!-- Статус апелляции -->
+<div class="card" style="border-left: 4px solid {% if appeal.status == 'pending' %}#ff9800{% elif appeal.status == 'approved' %}#4CAF50{% else %}#f44336{% endif %};">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2 style="margin-bottom: 0.5rem;">
+                Статус: 
+                <span style="background: {% if appeal.status == 'pending' %}#ff9800{% elif appeal.status == 'approved' %}#4CAF50{% else %}#f44336{% endif %}; color: white; padding: 0.3rem 1rem; border-radius: 20px; font-size: 1rem;">
+                    {% if appeal.status == 'pending' %}
+                        ⏳ На рассмотрении
+                    {% elif appeal.status == 'approved' %}
+                        ✅ Одобрена
+                    {% else %}
+                        ❌ Отклонена
+                    {% endif %}
+                </span>
+            </h2>
+            <p style="color: var(--text-secondary); margin: 0;">
+                Подана: {{ appeal.submitted_at|date:"d.m.Y H:i" }}
+            </p>
+        </div>
+        
+        {% if appeal.reviewed_at %}
+            <div style="text-align: right;">
+                <p style="color: var(--text-secondary); margin-bottom: 0.3rem;">
+                    Рассмотрена: {{ appeal.reviewed_at|date:"d.m.Y H:i" }}
+                </p>
+                {% if appeal.reviewed_by %}
+                    <p style="color: var(--text-secondary); margin: 0;">
+                        Администратор: {{ appeal.reviewed_by.username }}
+                    </p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Информация о санкции -->
+<div class="card">
+    <h2 class="card-title">Информация о санкции</h2>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div>
+            <strong style="color: var(--text-secondary);">Тип санкции:</strong>
+            <p style="margin: 0.3rem 0 0 0;">
+                <span style="background: #f44336; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">
+                    {{ appeal.sanction.get_sanction_type_display }}
+                </span>
+            </p>
+        </div>
+        
+        <div>
+            <strong style="color: var(--text-secondary);">Кому выдана:</strong>
+            <p style="margin: 0.3rem 0 0 0;">
+                {% if appeal.sanction.team %}
+                    Команда: <strong>{{ appeal.sanction.team.name }}</strong>
+                {% elif appeal.sanction.player %}
+                    Игрок: <strong>{{ appeal.sanction.player.username }}</strong>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    
+    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--border);">
+        <strong style="color: var(--text-secondary);">Причина санкции:</strong>
+        <p style="margin: 0.5rem 0 0 0; padding: 1rem; background: var(--card-bg); border-radius: 8px;">
+            {{ appeal.sanction.reason }}
+        </p>
+    </div>
+</div>
+
+<!-- Текст апелляции -->
+<div class="card">
+    <h2 class="card-title">Текст апелляции</h2>
+    
+    <div style="padding: 1rem; background: var(--card-bg); border-radius: 8px; margin-bottom: 1rem;">
+        <p style="white-space: pre-wrap; margin: 0; line-height: 1.8;">{{ appeal.reason }}</p>
+    </div>
+    
+    {% if appeal.evidence %}
+        <div>
+            <strong style="color: var(--text-secondary);">Доказательства:</strong>
+            <div style="padding: 1rem; background: var(--card-bg); border-radius: 8px; margin-top: 0.5rem;">
+                <p style="white-space: pre-wrap; margin: 0; line-height: 1.8;">{{ appeal.evidence }}</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Решение администрации -->
+{% if appeal.status != 'pending' %}
+<div class="card" style="border-left: 4px solid {% if appeal.status == 'approved' %}#4CAF50{% else %}#f44336{% endif %};">
+    <h2 class="card-title">
+        {% if appeal.status == 'approved' %}
+            ✅ Решение: Апелляция одобрена
+        {% else %}
+            ❌ Решение: Апелляция отклонена
+        {% endif %}
+    </h2>
+    
+    {% if appeal.review_notes %}
+        <div style="padding: 1rem; background: var(--card-bg); border-radius: 8px;">
+            <strong style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">
+                Комментарий администрации:
+            </strong>
+            <p style="white-space: pre-wrap; margin: 0; line-height: 1.8;">{{ appeal.review_notes }}</p>
+        </div>
+    {% endif %}
+    
+    {% if appeal.status == 'approved' %}
+        <div style="margin-top: 1rem; padding: 1rem; background: #d4edda; border-radius: 8px; border: 1px solid #c3e6cb;">
+            <p style="color: #155724; margin: 0;">
+                ✅ Санкция была отменена администрацией
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% else %}
+<div class="card" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+    <h3 style="color: #856404; margin-bottom: 0.5rem;">⏳ Апелляция на рассмотрении</h3>
+    <p style="color: #856404; margin: 0; line-height: 1.6;">
+        Ваша апелляция будет рассмотрена администрацией в течение 3-5 дней. 
+        Вы получите уведомление о решении.
+    </p>
+</div>
+{% endif %}
+
+<div class="card">
+    <a href="{% url 'teams:captain_dashboard' %}" class="btn btn-primary">
+        ← Вернуться к панели капитана
+    </a>
+</div>
+{% endblock %}
+
+{% block left_sidebar %}{% endblock %}
+{% block right_sidebar %}{% endblock %}

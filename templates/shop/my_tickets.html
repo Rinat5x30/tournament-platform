@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block title %}Мои тикеты{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tickets-page { max-width: 1000px; margin: 0 auto; }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    
+    .page-header h1 { color: var(--text-primary); margin: 0; font-size: 1.8rem; }
+    .header-actions { display: flex; gap: 10px; }
+    
+    .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+    .btn-outline { background: var(--secondary-bg); color: #667eea; border: 1px solid #667eea; }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-card {
+        background: var(--secondary-bg);
+        border-radius: 10px;
+        padding: 16px;
+        text-align: center;
+        border: 1px solid var(--border);
+    }
+    
+    .stat-card .icon { font-size: 1.3rem; margin-bottom: 6px; }
+    .stat-card .value { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+    .stat-card .label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+    
+    .filters {
+        background: var(--secondary-bg);
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 20px;
+        border: 1px solid var(--border);
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .filter-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .filter-label { font-size: 13px; color: var(--text-secondary); font-weight: 500; margin-right: 8px; }
+    
+    .filter-btn {
+        padding: 6px 14px;
+        border-radius: 16px;
+        font-size: 13px;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        background: transparent;
+        transition: all 0.2s;
+    }
+    
+    .filter-btn:hover { border-color: #667eea; color: #667eea; }
+    .filter-btn.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-color: transparent; }
+    
+    .tickets-list { display: flex; flex-direction: column; gap: 12px; }
+    
+    .ticket-card {
+        background: var(--secondary-bg);
+        border-radius: 10px;
+        padding: 16px 20px;
+        border: 1px solid var(--border);
+        display: grid;
+        grid-template-columns: 6px 1fr auto auto;
+        align-items: center;
+        gap: 16px;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .ticket-card:hover { transform: translateY(-2px); border-color: #667eea; }
+    
+    .priority-bar { height: 50px; border-radius: 3px; }
+    .priority-low { background: #4caf50; }
+    .priority-medium { background: #ff9800; }
+    .priority-high { background: #f44336; }
+    
+    .ticket-content { min-width: 0; }
+    
+    .ticket-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .ticket-id { font-size: 13px; color: var(--text-secondary); }
+    
+    .ticket-category {
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+    
+    .category-request { background: rgba(33,150,243,0.15); color: #1565c0; }
+    .category-complaint { background: rgba(255,152,0,0.15); color: #e65100; }
+    .category-purchase { background: rgba(156,39,176,0.15); color: #7b1fa2; }
+    
+    .unread-badge { background: #f44336; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+    
+    .ticket-subject { color: var(--text-primary); font-weight: 600; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ticket-meta { display: flex; gap: 12px; font-size: 13px; color: var(--text-secondary); }
+    
+    .status {
+        padding: 6px 14px;
+        border-radius: 16px;
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+    
+    .status-new { background: rgba(76,175,80,0.15); color: #2e7d32; }
+    .status-in_progress { background: rgba(33,150,243,0.15); color: #1565c0; }
+    .status-resolved { background: var(--card-bg); color: var(--text-secondary); }
+    .status-rejected { background: rgba(244,67,54,0.15); color: #c62828; }
+    
+    .ticket-arrow { color: var(--text-secondary); font-size: 1.2rem; }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: var(--secondary-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+    }
+    
+    .empty-state .icon { font-size: 4rem; margin-bottom: 16px; opacity: 0.5; }
+    .empty-state h3 { color: var(--text-primary); margin-bottom: 8px; }
+    .empty-state p { color: var(--text-secondary); margin-bottom: 20px; }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 24px;
+    }
+    
+    .pagination a, .pagination span {
+        padding: 8px 14px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .pagination a { background: var(--secondary-bg); color: #667eea; border: 1px solid var(--border); }
+    .pagination .current { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tickets-page">
+    <div class="page-header">
+        <h1>🎫 Мои тикеты</h1>
+        <div class="header-actions">
+            <a href="{% url 'shop:ticket_create' %}" class="btn btn-primary">➕ Создать тикет</a>
+            <a href="{% url 'shop:my_orders' %}" class="btn btn-outline">📦 Заказы</a>
+        </div>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card"><div class="icon">📊</div><div class="value">{{ stats.total|default:0 }}</div><div class="label">Всего</div></div>
+        <div class="stat-card"><div class="icon">🆕</div><div class="value">{{ stats.new|default:0 }}</div><div class="label">Новых</div></div>
+        <div class="stat-card"><div class="icon">🔄</div><div class="value">{{ stats.in_progress|default:0 }}</div><div class="label">В работе</div></div>
+        <div class="stat-card"><div class="icon">✅</div><div class="value">{{ stats.resolved|default:0 }}</div><div class="label">Решено</div></div>
+        <div class="stat-card"><div class="icon">❌</div><div class="value">{{ stats.rejected|default:0 }}</div><div class="label">Отклонено</div></div>
+    </div>
+    
+    <div class="filters">
+        <div class="filter-group">
+            <span class="filter-label">Статус:</span>
+            <a href="{% url 'shop:my_tickets' %}" class="filter-btn {% if not current_status %}active{% endif %}">Все</a>
+            <a href="?status=new" class="filter-btn {% if current_status == 'new' %}active{% endif %}">🆕 Новые</a>
+            <a href="?status=in_progress" class="filter-btn {% if current_status == 'in_progress' %}active{% endif %}">🔄 В работе</a>
+            <a href="?status=resolved" class="filter-btn {% if current_status == 'resolved' %}active{% endif %}">✅ Решено</a>
+            <a href="?status=rejected" class="filter-btn {% if current_status == 'rejected' %}active{% endif %}">❌Отклонено</a>
+
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">Категория:</span>
+            <a href="{% url 'shop:my_tickets' %}{% if current_status %}?status={{ current_status }}{% endif %}" class="filter-btn {% if not current_category %}active{% endif %}">Все</a>
+            <a href="?category=request{% if current_status %}&status={{ current_status }}{% endif %}" class="filter-btn {% if current_category == 'request' %}active{% endif %}">📝 Запросы</a>
+            <a href="?category=complaint{% if current_status %}&status={{ current_status }}{% endif %}" class="filter-btn {% if current_category == 'complaint' %}active{% endif %}">⚠️ Жалобы</a>
+        </div>
+    </div>
+    
+    {% if tickets %}
+    <div class="tickets-list">
+        {% for ticket in tickets %}
+        <a href="{% url 'shop:ticket_detail' ticket.id %}" class="ticket-card">
+            <div class="priority-bar priority-{{ ticket.priority }}"></div>
+            <div class="ticket-content">
+                <div class="ticket-header">
+                    <span class="ticket-id">#{{ ticket.id }}</span>
+                    <span class="ticket-category category-{{ ticket.category }}">
+                        {% if ticket.category == 'request' %}📝 Запрос{% elif ticket.category == 'complaint' %}⚠️ Жалоба{% else %}🛒 Покупка{% endif %}
+                    </span>
+                    {% if ticket.has_unread_messages %}<span class="unread-badge">Новое</span>{% endif %}
+                </div>
+                <div class="ticket-subject">{{ ticket.title }}</div>
+                <div class="ticket-meta">
+                    <span>🕐 {{ ticket.created_at|date:"d.m.Y H:i" }}</span>
+                    {% if ticket.assigned_to %}<span>👤 {{ ticket.assigned_to.username }}</span>{% endif %}
+                </div>
+            </div>
+            <span class="status status-{{ ticket.status }}">
+                {% if ticket.status == 'new' %}Новый{% elif ticket.status == 'in_progress' %}В работе{% elif ticket.status == 'resolved' %}Решён{% else %}Отклонён{% endif %}
+            </span>
+            <span class="ticket-arrow">→</span>
+        </a>
+        {% endfor %}
+    </div>
+    
+    {% if tickets.has_other_pages %}
+    <div class="pagination">
+        {% if tickets.has_previous %}<a href="?page={{ tickets.previous_page_number }}">←</a>{% endif %}
+        {% for num in tickets.paginator.page_range %}
+            {% if tickets.number == num %}<span class="current">{{ num }}</span>
+            {% elif num > tickets.number|add:'-3' and num < tickets.number|add:'3' %}<a href="?page={{ num }}">{{ num }}</a>{% endif %}
+        {% endfor %}
+        {% if tickets.has_next %}<a href="?page={{ tickets.next_page_number }}">→</a>{% endif %}
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">🎫</div>
+        <h3>{% if current_status or current_category %}Тикетов не найдено{% else %}Нет тикетов{% endif %}</h3>
+        <p>{% if current_status or current_category %}Измените фильтры{% else %}Создайте тикет{% endif %}</p>
+        <a href="{% url 'shop:ticket_create' %}" class="btn btn-primary">➕ Создать тикет</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

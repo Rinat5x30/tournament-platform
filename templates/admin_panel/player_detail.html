@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ player.username }} - Детали игрока - Админ-панель{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Детали игрока: {{ player.username }}</h1>
+        <a href="{% url 'admin_panel:player_edit' player.id %}" class="btn btn-primary">
+            <i class="bi bi-pencil"></i> Редактировать
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Основная информация -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if player.avatar %}
+                        <img src="{{ player.avatar.url }}" alt="{{ player.username }}" class="profile-avatar mb-3">
+                    {% else %}
+                        <div class="profile-avatar mb-3" style="background: var(--card-bg); display: flex; align-items: center; justify-content: center; font-size: 4rem;">
+                            👤
+                        </div>
+                    {% endif %}
+                    
+                    <h2>{{ player.username }}</h2>
+                    {% if player.get_full_name %}
+                        <p class="text-muted">{{ player.get_full_name }}</p>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        {% if player.role == 'admin' %}
+                            <span class="badge bg-danger">Администратор</span>
+                        <!-- {% elif player.role == 'moderator' %}
+                            <span class="badge bg-warning">Модератор</span> -->
+                        {% elif player.role == 'captain' %}
+                            <span class="badge bg-info">Капитан</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Игрок</span>
+                        {% endif %}
+                        
+                        {% if player.is_staff %}
+                            <span class="badge bg-primary">Staff</span>
+                        {% endif %}
+                        
+                        {% if player.is_active %}
+                            <span class="badge bg-success">Активен</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Неактивен</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>Информация</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>ID:</strong> {{ player.id }}</p>
+                    <p><strong>Email:</strong> {{ player.email|default:"-" }}</p>
+                    <p><strong>Discord:</strong> {{ player.discord_username|default:"-" }}</p>
+                    <p><strong>Дата регистрации:</strong> {{ player.date_joined|date:"d.m.Y" }}</p>
+                    <p><strong>Последний вход:</strong> {{ player.last_login|date:"d.m.Y H:i"|default:"-" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <!-- Статистика -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Статистика</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-value">{{ matches|length }}</div>
+                                <div class="stat-label">Матчей</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-value">{{ goals }}</div>
+                                <div class="stat-label">Голов</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-value">{{ assists }}</div>
+                                <div class="stat-label">Передач</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-value">{{ rating.rating|default:"-"|floatformat:0 }}</div>
+                                <div class="stat-label">Рейтинг</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Команды -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Команды</h5>
+                </div>
+                <div class="card-body">
+                    {% if teams %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Команда</th>
+                                        <th>Дата вступления</th>
+                                        <th>Статус</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for membership in teams %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'teams:team_detail' membership.team.slug %}">
+                                                    {{ membership.team.name }}
+                                                </a>
+                                            </td>
+                                            <td>{{ membership.joined_date|date:"d.m.Y" }}</td>
+                                            <td>
+                                                {% if membership.is_active %}
+                                                    <span class="badge bg-success">Активен</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Покинул</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Игрок не состоит ни в одной команде</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Последние матчи -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Последние матчи</h5>
+                </div>
+                <div class="card-body">
+                    {% if matches %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Дата</th>
+                                        <th>Турнир</th>
+                                        <th>Матч</th>
+                                        <th>Счёт</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for match in matches %}
+                                        <tr>
+                                            <td>{{ match.scheduled_time|date:"d.m.Y" }}</td>
+                                            <td>{{ match.tournament.name }}</td>
+                                            <td>{{ match.team1.name }} vs {{ match.team2.name }}</td>
+                                            <td>{{ match.score_team1 }}:{{ match.score_team2 }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Нет сыгранных матчей</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a href="{% url 'admin_panel:player_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Назад к списку
+        </a>
+        <a href="{% url 'accounts:profile' player.username %}" class="btn btn-info" target="_blank">
+            <i class="bi bi-eye"></i> Посмотреть профиль
+        </a>
+    </div>
+</div>
+
+<style>
+.profile-avatar {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    margin: 0 auto;
+}
+
+.stat-box {
+    padding: 1rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+    margin: 0.5rem 0;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--accent);
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}

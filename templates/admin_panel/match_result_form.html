@@ -1,0 +1,250 @@
+<!-- templates/admin_panel/match_result_form.html -->
+<!-- ПОЛНАЯ ВЕРСИЯ с вводом статистики игроков -->
+{% extends 'base.html' %}
+
+{% block title %}Результат матча #{{ match.id }} | Админ-панель{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>📊 Ввод результата матча</h1>
+    <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+        {{ match.team1.name }} vs {{ match.team2.name }}
+        {% if match.scheduled_time %}
+        | {{ match.scheduled_time|date:"d.m.Y H:i" }}
+        {% endif %}
+    </p>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    
+    <!-- Основной счёт -->
+    <div class="card">
+        <h2>⚽ Счёт матча</h2>
+        
+        <div style="display: flex; align-items: center; justify-content: center; gap: 2rem; margin: 2rem 0;">
+            <div style="text-align: center;">
+                {% if match.team1.logo %}
+                <img src="{{ match.team1.logo.url }}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
+                {% else %}
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--card-bg); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto;">⚽</div>
+                {% endif %}
+                <h3 style="margin: 0.5rem 0;">{{ match.team1.name }}</h3>
+                <input type="number" name="score_team1" 
+                       value="{{ match.score_team1|default:0 }}" 
+                       min="0" max="99"
+                       style="width: 80px; height: 60px; font-size: 2rem; text-align: center; 
+                              background: var(--card-bg); color: var(--text-primary); 
+                              border: 2px solid var(--accent); border-radius: 10px;"
+                       required>
+            </div>
+            
+            <div style="font-size: 2.5rem; color: var(--text-secondary);">:</div>
+            
+            <div style="text-align: center;">
+                {% if match.team2.logo %}
+                <img src="{{ match.team2.logo.url }}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
+                {% else %}
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--card-bg); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto;">⚽</div>
+                {% endif %}
+                <h3 style="margin: 0.5rem 0;">{{ match.team2.name }}</h3>
+                <input type="number" name="score_team2" 
+                       value="{{ match.score_team2|default:0 }}" 
+                       min="0" max="99"
+                       style="width: 80px; height: 60px; font-size: 2rem; text-align: center; 
+                              background: var(--card-bg); color: var(--text-primary); 
+                              border: 2px solid var(--accent); border-radius: 10px;"
+                       required>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Статистика игроков команды 1 -->
+    <div class="card">
+        <h2>👥 {{ match.team1.name }} - Статистика игроков</h2>
+        
+        {% if team1_members %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Игрок</th>
+                        <th style="text-align: center; width: 80px;">⚽ Голы</th>
+                        <th style="text-align: center; width: 80px;">🎯 Передачи</th>
+                        <th style="text-align: center; width: 80px;">🧤 Сейвы</th>
+                        <th style="text-align: center; width: 80px;">🎾 Удары</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in team1_members %}
+                    <tr>
+                        <td>
+                            <strong>{{ member.player.username }}</strong>
+                            {% if member.role == 'captain' %}
+                            <span style="color: var(--accent); font-size: 0.8em;">(К)</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            <input type="number" name="player_{{ member.player.id }}_goals" 
+                                   value="0" min="0" max="99"
+                                   class="stat-input">
+                        </td>
+                        <td style="text-align: center;">
+                            <input type="number" name="player_{{ member.player.id }}_assists" 
+                                   value="0" min="0" max="99"
+                                   class="stat-input">
+                        </td>
+                        <td style="text-align: center;">
+                            <input type="number" name="player_{{ member.player.id }}_saves" 
+                                   value="0" min="0" max="99"
+                                   class="stat-input">
+                        </td>
+                        <td style="text-align: center;">
+                            <input type="number" name="player_{{ member.player.id }}_shots" 
+                                   value="0" min="0" max="99"
+                                   class="stat-input">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color: var(--text-secondary); padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+            ⚠️ В команде нет игроков. Добавьте игроков в команду для отслеживания статистики.
+        </p>
+        {% endif %}
+    </div>
+    
+    <!-- Статистика игроков команды 2 -->
+    <div class="card">
+        <h2>👥 {{ match.team2.name }} - Статистика игроков</h2>
+        
+        {% if team2_members %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Игрок</th>
+                        <th style="text-align: center; width: 80px;">⚽ Голы</th>
+                        <th style="text-align: center; width: 80px;">🎯 Передачи</th>
+                        <th style="text-align: center; width: 80px;">🧤 Сейвы</th>
+                        <th style="text-align: center; width: 80px;">🎾 Удары</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in team2_members %}
+                    <tr>
+                        <td>
+                            <strong>{{ member.player.username }}</strong>
+                            {% if member.role == 'captain' %}
+                            <span style="color: var(--accent); font-size: 0.8em;">(К)</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            <input type="number" name="player_{{ member.player.id }}_goals" 
+                                   value="0" min="0" max="99"
+                                   class="stat-input">
+                        </td>
+                        <td style="text-align: center;">
+                            <input type="number" name="player_{{ member.player.id }}_assists" 
+                                   value="0" min="0" max="99"
+                                   class="stat-input">
+                        </td>
+                        <td style="text-align: center;">
+                            <input type="number" name="player_{{ member.player.id }}_saves" 
+                                   value="0" min="0" max="99"
+                                   class="stat-input">
+                        </td>
+                        <td style="text-align: center;">
+                            <input type="number" name="player_{{ member.player.id }}_shots" 
+                                   value="0" min="0" max="99"
+                                   class="stat-input">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color: var(--text-secondary); padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+            ⚠️ В команде нет игроков. Добавьте игроков в команду для отслеживания статистики.
+        </p>
+        {% endif %}
+    </div>
+    
+    <!-- Дополнительная информация -->
+    <div class="card">
+        <h2>📝 Дополнительно</h2>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label>Фактическое время начала</label>
+                <input type="datetime-local" name="actual_start_time" 
+                       style="width: 100%; padding: 0.75rem; background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border); border-radius: 8px;">
+            </div>
+            
+            <div class="form-group">
+                <label>Фактическое время окончания</label>
+                <input type="datetime-local" name="actual_end_time" 
+                       style="width: 100%; padding: 0.75rem; background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border); border-radius: 8px;">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Заметки</label>
+            <textarea name="notes" rows="3" 
+                      style="width: 100%; padding: 0.75rem; background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border); border-radius: 8px; resize: vertical;"
+                      placeholder="Дополнительная информация о матче..."></textarea>
+        </div>
+    </div>
+    
+    <!-- Кнопки -->
+    <div class="card" style="display: flex; gap: 1rem; justify-content: space-between; flex-wrap: wrap;">
+        <a href="{% url 'admin_panel:match_detail' match.id %}" class="btn btn-secondary">
+            ← Отмена
+        </a>
+        <button type="submit" class="btn btn-primary" style="padding: 1rem 2rem;">
+            ✅ Сохранить результат
+        </button>
+    </div>
+</form>
+
+<!-- Информационный блок -->
+<div class="card" style="background: linear-gradient(135deg, rgba(255,152,0,0.1), rgba(255,193,7,0.1)); border-left: 4px solid #FF9800;">
+    <h3 style="margin-bottom: 0.5rem;">💡 Как начисляются очки рейтинга</h3>
+    <div style="color: var(--text-secondary); font-size: 0.95rem;">
+        <p><strong>Команды:</strong> Победа +25, Ничья +5, Поражение -20</p>
+        <p><strong>Игроки:</strong> Победа +20, Ничья +5, Поражение -15</p>
+        <p><strong>Бонусы:</strong> Гол +10, Передача +5, Сейв +2</p>
+    </div>
+</div>
+
+<style>
+    .stat-input {
+        width: 60px;
+        padding: 0.5rem;
+        text-align: center;
+        background: var(--card-bg);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+    
+    .stat-input:focus {
+        border-color: var(--accent);
+        outline: none;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}

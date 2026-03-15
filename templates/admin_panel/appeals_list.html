@@ -1,0 +1,87 @@
+<!-- templates/admin_panel/appeals_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}Апелляции | Админ-панель{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>📋 Управление апелляциями</h1>
+    <p style="color: var(--text-secondary);">Рассмотрение обжалований санкций и спорных ситуаций</p>
+</div>
+
+<!-- Фильтры -->
+<div class="card">
+    <form method="get" style="display: flex; gap: 1rem; align-items: end;">
+        <div style="flex: 1;">
+            <label>Статус</label>
+            <select name="status" class="form-control">
+                <option value="">Все</option>
+                <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Ожидает рассмотрения</option>
+                <option value="in_review" {% if selected_status == 'in_review' %}selected{% endif %}>На рассмотрении</option>
+                <option value="approved" {% if selected_status == 'approved' %}selected{% endif %}>Одобрена</option>
+                <option value="rejected" {% if selected_status == 'rejected' %}selected{% endif %}>Отклонена</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Фильтровать</button>
+        {% if selected_status %}
+        <a href="{% url 'admin_panel:appeals_list' %}" class="btn btn-secondary">Сбросить</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Список апелляций -->
+<div class="card">
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Дата подачи</th>
+                    <th>От кого</th>
+                    <th>Предмет</th>
+                    <th>Причина</th>
+                    <th>Статус</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appeal in appeals %}
+                <tr>
+                    <td>{{ appeal.submitted_at|date:"d.m.Y H:i" }}</td>
+                    <td>{{ appeal.submitted_by.username }}</td>
+                    <td>
+                        {% if appeal.sanction %}
+                            Санкция: {{ appeal.sanction.get_sanction_type_display }}
+                        {% elif appeal.match %}
+                            Матч: {{ appeal.match }}
+                        {% endif %}
+                    </td>
+                    <td style="max-width: 300px;">{{ appeal.reason|truncatewords:10 }}</td>
+                    <td>
+                        {% if appeal.status == 'pending' %}
+                            <span style="color: #ff9800;">🟡 Ожидает</span>
+                        {% elif appeal.status == 'in_review' %}
+                            <span style="color: #2196F3;">🔵 Рассматривается</span>
+                        {% elif appeal.status == 'approved' %}
+                            <span style="color: #4CAF50;">✅ Одобрена</span>
+                        {% elif appeal.status == 'rejected' %}
+                            <span style="color: #f44336;">❌ Отклонена</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'admin_panel:appeal_review' appeal.id %}" class="btn btn-secondary" style="padding: 0.3rem 0.6rem;">
+                            Рассмотреть
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                        Апелляций пока нет
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

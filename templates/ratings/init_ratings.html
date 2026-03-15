@@ -1,0 +1,64 @@
+<!-- templates/ratings/init_ratings.html -->
+{% extends 'base.html' %}
+
+{% block title %}Инициализация рейтингов | Tournament Platform{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>⚙️ Инициализация рейтингов</h1>
+    <p style="color: var(--text-secondary);">
+        Эта страница создаёт начальные рейтинги для всех игроков и команд, у которых их ещё нет.
+    </p>
+</div>
+
+<div class="card">
+    <h2>📊 Текущее состояние</h2>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0;">
+        <div style="background: var(--card-bg); padding: 1rem; border-radius: 10px; border: 1px solid var(--border);">
+            <div style="font-size: 2rem; font-weight: bold; color: var(--accent);">{{ players_count }}</div>
+            <div style="color: var(--text-secondary);">Всего игроков</div>
+        </div>
+        
+        <div style="background: var(--card-bg); padding: 1rem; border-radius: 10px; border: 1px solid var(--border);">
+            <div style="font-size: 2rem; font-weight: bold; color: var(--accent);">{{ existing_player_ratings }}</div>
+            <div style="color: var(--text-secondary);">Рейтингов игроков</div>
+        </div>
+        
+        <div style="background: var(--card-bg); padding: 1rem; border-radius: 10px; border: 1px solid var(--border);">
+            <div style="font-size: 2rem; font-weight: bold; color: var(--accent);">{{ teams_count }}</div>
+            <div style="color: var(--text-secondary);">Всего команд</div>
+        </div>
+        
+        <div style="background: var(--card-bg); padding: 1rem; border-radius: 10px; border: 1px solid var(--border);">
+            <div style="font-size: 2rem; font-weight: bold; color: var(--accent);">{{ existing_team_ratings }}</div>
+            <div style="color: var(--text-secondary);">Рейтингов команд</div>
+        </div>
+    </div>
+    
+    {% if players_count > existing_player_ratings or teams_count > existing_team_ratings %}
+    <div style="background: #ff9800; color: #000; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+        ⚠️ <strong>Внимание!</strong> 
+        Не все игроки/команды имеют рейтинги. 
+        Нужно создать {{ players_count|add:"-"|add:existing_player_ratings }} рейтингов игроков 
+        и {{ teams_count|add:"-"|add:existing_team_ratings }} рейтингов команд.
+    </div>
+    {% else %}
+    <div style="background: #4CAF50; color: #fff; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+        ✅ Все рейтинги уже созданы!
+    </div>
+    {% endif %}
+    
+    <form method="post" style="margin-top: 1.5rem;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1.1rem;">
+            🚀 Создать недостающие рейтинги
+        </button>
+    </form>
+    
+    <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+        <a href="{% url 'ratings:player_ratings' %}" class="btn btn-secondary">← Вернуться к рейтингам игроков</a>
+        <a href="{% url 'ratings:team_ratings' %}" class="btn btn-secondary">← Вернуться к рейтингам команд</a>
+    </div>
+</div>
+{% endblock %}

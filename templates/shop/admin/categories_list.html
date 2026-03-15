@@ -1,0 +1,59 @@
+
+<!-- templates/shop/admin/categories_list.html -->
+{% extends 'base.html' %}
+{% block title %}Управление категориями{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-3xl font-bold">📁 Управление категориями</h1>
+        <div class="flex gap-4">
+            <a href="{% url 'shop:admin_category_create' %}" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                + Создать категорию
+            </a>
+            <a href="{% url 'shop:admin_dashboard' %}" class="text-blue-600 hover:underline">← Админ-панель</a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Название</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Тип</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Услуг</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Действия</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for category in categories %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4">{{ category.id }}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            {% if category.icon %}<span>{{ category.icon }}</span>{% endif %}
+                            <span class="font-medium">{{ category.name }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs rounded bg-gray-100">{{ category.get_category_type_display }}</span>
+                    </td>
+                    <td class="px-6 py-4">{{ category.services_count }}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs rounded {% if category.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                            {% if category.is_active %}Активна{% else %}Неактивна{% endif %}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <a href="{% url 'shop:admin_category_edit' category.id %}" class="text-blue-600 hover:underline">
+                            Изменить
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

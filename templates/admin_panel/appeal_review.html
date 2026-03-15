@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+
+{% block title %}Рассмотрение апелляции | Админ-панель{% endblock %}
+
+{% block content %}
+<style>
+    .appeal-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+    }
+    
+    .appeal-header {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        border-left: 4px solid var(--accent);
+    }
+    
+    .info-block {
+        background: var(--primary-bg);
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+    }
+    
+    .info-row {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 1rem;
+        margin-bottom: 0.8rem;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+    
+    .info-value {
+        color: var(--text-primary);
+    }
+    
+    .evidence-section {
+        background: var(--card-bg);
+        padding: 1.5rem;
+        border-radius: 8px;
+        border-left: 3px solid #2196F3;
+        margin-bottom: 1.5rem;
+    }
+    
+    .decision-form {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 10px;
+        margin-top: 2rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: var(--primary-bg);
+        color: var(--text-primary);
+        font-size: 1rem;
+    }
+    
+    .form-group textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .status-pending {
+        background: rgba(255, 152, 0, 0.2);
+        color: #ff9800;
+    }
+    
+    .status-approved {
+        background: rgba(76, 175, 80, 0.2);
+        color: #4CAF50;
+    }
+    
+    .status-rejected {
+        background: rgba(244, 67, 54, 0.2);
+        color: #f44336;
+    }
+    
+    .status-in_review {
+        background: rgba(33, 150, 243, 0.2);
+        color: #2196F3;
+    }
+</style>
+
+<div class="appeal-container">
+    <div class="appeal-header">
+        <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div>
+                <h1>📋 Рассмотрение апелляции</h1>
+                <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+                    ID: #{{ appeal.id }}
+                </p>
+            </div>
+            <div>
+                {% if appeal.status == 'pending' %}
+                    <span class="status-badge status-pending">⏳ Ожидает</span>
+                {% elif appeal.status == 'in_review' %}
+                    <span class="status-badge status-in_review">🔍 Рассматривается</span>
+                {% elif appeal.status == 'approved' %}
+                    <span class="status-badge status-approved">✅ Одобрена</span>
+                {% elif appeal.status == 'rejected' %}
+                    <span class="status-badge status-rejected">❌ Отклонена</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Основная информация -->
+    <div class="card">
+        <h2 class="card-title">Основная информация</h2>
+        
+        <div class="info-block">
+            <div class="info-row">
+                <div class="info-label">От кого:</div>
+                <div class="info-value">
+                    <strong>{{ appeal.submitted_by.username }}</strong>
+                    {% if appeal.submitted_by.discord_username %}
+                        ({{ appeal.submitted_by.discord_username }})
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="info-row">
+                <div class="info-label">Дата подачи:</div>
+                <div class="info-value">{{ appeal.submitted_at|date:"d.m.Y H:i" }}</div>
+            </div>
+            
+            <div class="info-row">
+                <div class="info-label">Предмет апелляции:</div>
+                <div class="info-value">
+                    {% if appeal.sanction %}
+                        <strong>Санкция:</strong> {{ appeal.sanction.get_sanction_type_display }}
+                        <br>
+                        <small style="color: var(--text-secondary);">
+                            Турнир: {{ appeal.sanction.tournament.name }}
+                        </small>
+                    {% elif appeal.match %}
+                        <strong>Матч:</strong> {{ appeal.match.team1.name }} vs {{ appeal.match.team2.name }}
+                        <br>
+                        <small style="color: var(--text-secondary);">
+                            {{ appeal.match.scheduled_time|date:"d.m.Y" }}
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Причина апелляции -->
+    <div class="card">
+        <h2 class="card-title">Причина апелляции</h2>
+        <div class="info-block">
+            <p style="white-space: pre-wrap; line-height: 1.6;">{{ appeal.reason }}</p>
+        </div>
+    </div>
+    
+    <!-- Доказательства -->
+    {% if appeal.evidence_text or appeal.evidence_file %}
+    <div class="card">
+        <h2 class="card-title">Доказательства</h2>
+        
+        {% if appeal.evidence_text %}
+        <div class="evidence-section">
+            <h3 style="margin-top: 0; font-size: 1rem; color: var(--text-secondary);">
+                📝 Текстовое доказательство
+            </h3>
+            <div style="white-space: pre-wrap; line-height: 1.6;">
+                {{ appeal.evidence_text }}
+            </div>
+            
+            <!-- Если это ссылка, делаем её кликабельной -->
+            {% if 'http' in appeal.evidence_text %}
+                <a href="{{ appeal.evidence_text }}" target="_blank" class="btn btn-secondary" style="margin-top: 1rem;">
+                    🔗 Открыть ссылку
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        {% if appeal.evidence_file %}
+        <div class="evidence-section">
+            <h3 style="margin-top: 0; font-size: 1rem; color: var(--text-secondary);">
+                📎 Файл доказательства
+            </h3>
+            <a href="{{ appeal.evidence_file.url }}" target="_blank" class="btn btn-primary">
+                📥 Скачать файл
+            </a>
+            <small style="display: block; margin-top: 0.5rem; color: var(--text-secondary);">
+                {{ appeal.evidence_file.name }}
+            </small>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Форма решения или результат -->
+    {% if appeal.status in 'pending,in_review' %}
+    <div class="card">
+        <h2 class="card-title">Вынести решение</h2>
+        <form method="post" class="decision-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label>Решение *</label>
+                <select name="decision" required>
+                    <option value="">-- Выберите решение --</option>
+                    <option value="approved">✅ Одобрить апелляцию</option>
+                    <option value="rejected">❌ Отклонить апелляцию</option>
+                </select>
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+                    При одобрении санкция будет автоматически отменена
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label>Примечания к решению *</label>
+                <textarea name="review_notes" 
+                          required 
+                          placeholder="Опишите причину вашего решения. Это будет видно подавшему апелляцию."></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 1rem;">
+                <a href="{% url 'admin_panel:appeals_list' %}" class="btn btn-secondary">
+                    ← Отмена
+                </a>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    ⚖️ Вынести решение
+                </button>
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <div class="card">
+        <h2 class="card-title">Решение по апелляции</h2>
+        
+        <div class="info-block">
+            <div class="info-row">
+                <div class="info-label">Статус:</div>
+                <div class="info-value">
+                    {% if appeal.status == 'approved' %}
+                        <span class="status-badge status-approved">✅ Одобрена</span>
+                    {% else %}
+                        <span class="status-badge status-rejected">❌ Отклонена</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="info-row">
+                <div class="info-label">Рассмотрел:</div>
+                <div class="info-value">{{ appeal.reviewed_by.username }}</div>
+            </div>
+            
+            <div class="info-row">
+                <div class="info-label">Дата рассмотрения:</div>
+                <div class="info-value">{{ appeal.reviewed_at|date:"d.m.Y H:i" }}</div>
+            </div>
+        </div>
+        
+        <h3 style="margin-top: 2rem;">Примечания к решению</h3>
+        <div class="info-block">
+            <p style="white-space: pre-wrap; line-height: 1.6;">{{ appeal.review_notes }}</p>
+        </div>
+        
+        <a href="{% url 'admin_panel:appeals_list' %}" class="btn btn-secondary">
+            ← Вернуться к списку
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

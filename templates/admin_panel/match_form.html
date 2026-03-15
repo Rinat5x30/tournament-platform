@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if match %}Редактировать{% else %}Создать{% endif %} матч | Админ-панель{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>{% if match %}✏️ Редактировать матч{% else %}➕ Создать новый матч{% endif %}</h1>
+</div>
+
+<div class="card">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="{{ form.tournament.id_for_label }}">Турнир *</label>
+                {{ form.tournament }}
+                {% if form.tournament.errors %}
+                    <div style="color: #f44336; margin-top: 0.5rem;">{{ form.tournament.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.stage.id_for_label }}">Стадия</label>
+                {{ form.stage }}
+                {% if form.stage.errors %}
+                    <div style="color: #f44336; margin-top: 0.5rem;">{{ form.stage.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="{{ form.team1.id_for_label }}">Команда 1 *</label>
+                {{ form.team1 }}
+                {% if form.team1.errors %}
+                    <div style="color: #f44336; margin-top: 0.5rem;">{{ form.team1.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.team2.id_for_label }}">Команда 2 *</label>
+                {{ form.team2 }}
+                {% if form.team2.errors %}
+                    <div style="color: #f44336; margin-top: 0.5rem;">{{ form.team2.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.round_number.id_for_label }}">Номер тура</label>
+                {{ form.round_number }}
+                {% if form.round_number.errors %}
+                    <div style="color: #f44336; margin-top: 0.5rem;">{{ form.round_number.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="{{ form.scheduled_time.id_for_label }}">Дата и время *</label>
+                {{ form.scheduled_time }}
+                {% if form.scheduled_time.errors %}
+                    <div style="color: #f44336; margin-top: 0.5rem;">{{ form.scheduled_time.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.status.id_for_label }}">Статус</label>
+                {{ form.status }}
+                {% if form.status.errors %}
+                    <div style="color: #f44336; margin-top: 0.5rem;">{{ form.status.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.stream_url.id_for_label }}">Ссылка на трансляцию</label>
+            {{ form.stream_url }}
+            {% if form.stream_url.errors %}
+                <div style="color: #f44336; margin-top: 0.5rem;">{{ form.stream_url.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.notes.id_for_label }}">Заметки</label>
+            {{ form.notes }}
+            {% if form.notes.errors %}
+                <div style="color: #f44336; margin-top: 0.5rem;">{{ form.notes.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">
+                {% if match %}💾 Сохранить изменения{% else %}➕ Создать матч{% endif %}
+            </button>
+            <a href="{% if match %}{% url 'admin_panel:match_detail' match.id %}{% else %}{% url 'admin_panel:match_list' %}{% endif %}" class="btn btn-secondary">
+                Отмена
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

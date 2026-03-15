@@ -1,0 +1,144 @@
+<!-- templates/ratings/recalculate.html -->
+{% extends 'base.html' %}
+
+{% block title %}Управление рейтингами | Admin{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>⚙️ Управление рейтингами</h1>
+    <p style="color: var(--text-secondary);">
+        Инструменты для управления и пересчёта рейтингов игроков и команд.
+    </p>
+</div>
+
+<!-- Статистика -->
+<div class="card">
+    <h2>📊 Текущее состояние</h2>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 1.5rem 0;">
+        <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: bold; color: var(--accent);">{{ total_players }}</div>
+            <div style="color: var(--text-secondary);">Всего игроков</div>
+        </div>
+        
+        <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: bold; color: var(--accent);">{{ player_ratings_count }}</div>
+            <div style="color: var(--text-secondary);">Рейтингов игроков</div>
+        </div>
+        
+        <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: bold; color: var(--accent);">{{ total_teams }}</div>
+            <div style="color: var(--text-secondary);">Всего команд</div>
+        </div>
+        
+        <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: bold; color: var(--accent);">{{ team_ratings_count }}</div>
+            <div style="color: var(--text-secondary);">Рейтингов команд</div>
+        </div>
+        
+        <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: bold; color: var(--success);">{{ finished_matches }}</div>
+            <div style="color: var(--text-secondary);">Завершённых матчей</div>
+        </div>
+    </div>
+    
+    {% if total_players != player_ratings_count or total_teams != team_ratings_count %}
+    <div style="background: #ff9800; color: #000; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+        ⚠️ <strong>Внимание!</strong> Не все игроки/команды имеют рейтинги. 
+        Рекомендуется создать недостающие рейтинги.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Действия -->
+<div class="card">
+    <h2>🔧 Действия</h2>
+    
+    <div style="display: grid; gap: 1.5rem; margin-top: 1rem;">
+        <!-- Создать недостающие рейтинги -->
+        <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: 10px;">
+            <h3 style="margin-bottom: 0.5rem;">📝 Создать недостающие рейтинги</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                Создаёт начальные рейтинги (1500 очков) для игроков и команд, 
+                у которых их ещё нет. Не влияет на существующие рейтинги.
+            </p>
+            <form method="post" style="display: inline;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="init">
+                <button type="submit" class="btn btn-primary">
+                    ✨ Создать недостающие рейтинги
+                </button>
+            </form>
+        </div>
+        
+        <!-- Полный пересчёт -->
+        <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: 10px; border: 2px solid var(--danger);">
+            <h3 style="margin-bottom: 0.5rem; color: var(--danger);">🔄 Полный пересчёт рейтингов</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                <strong>⚠️ Внимание!</strong> Сбрасывает ВСЕ рейтинги до начальных значений (1500 очков, 0 матчей) 
+                и пересчитывает их заново на основе всех завершённых матчей. 
+                Используйте только если рейтинги сбились.
+            </p>
+            <form method="post" style="display: inline;" 
+                  onsubmit="return confirm('Вы уверены? Все текущие рейтинги будут сброшены и пересчитаны!');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="recalculate">
+                <button type="submit" class="btn" style="background: var(--danger); color: white;">
+                    🔄 Пересчитать все рейтинги
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Навигация -->
+<div class="card" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a href="{% url 'ratings:player_ratings' %}" class="btn btn-secondary">
+        ⭐ Рейтинг игроков
+    </a>
+    <a href="{% url 'ratings:team_ratings' %}" class="btn btn-secondary">
+        🏅 Рейтинг команд
+    </a>
+    <a href="{% url 'admin_panel:dashboard' %}" class="btn btn-secondary">
+        ← Админ-панель
+    </a>
+</div>
+
+<!-- Информация -->
+<div class="card">
+    <h2>ℹ️ Как работают рейтинги</h2>
+    
+    <div style="color: var(--text-secondary); line-height: 1.8;">
+        <h3 style="color: var(--text-primary); margin-top: 1rem;">Автоматическое обновление</h3>
+        <p>
+            Рейтинги обновляются <strong>автоматически</strong> после каждого завершённого матча:
+        </p>
+        <ul>
+            <li>При вводе результата матча в админ-панели</li>
+            <li>При изменении статуса матча на "Завершён"</li>
+        </ul>
+        
+        <h3 style="color: var(--text-primary); margin-top: 1.5rem;">Начисление очков</h3>
+        <table style="width: 100%; margin-top: 0.5rem;">
+            <tr>
+                <td><strong>Команды:</strong></td>
+                <td>Победа +25, Ничья +5, Поражение -20</td>
+            </tr>
+            <tr>
+                <td><strong>Игроки:</strong></td>
+                <td>Победа +20, Ничья +5, Поражение -15</td>
+            </tr>
+            <tr>
+                <td><strong>Бонусы:</strong></td>
+                <td>Гол +10, Передача +5, Сейв +2</td>
+            </tr>
+        </table>
+        
+        <h3 style="color: var(--text-primary); margin-top: 1.5rem;">Важно</h3>
+        <p>
+            Для корректного обновления рейтингов игроков необходимо вводить 
+            <strong>статистику игроков</strong> (голы, передачи, сейвы) при сохранении результата матча.
+        </p>
+    </div>
+</div>
+{% endblock %}

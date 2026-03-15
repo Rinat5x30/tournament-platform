@@ -1,0 +1,536 @@
+<!-- templates/admin_panel/player_edit.html -->
+{% extends 'base.html' %}
+
+{% block title %}Редактирование {{ player.username }} | Админ-панель{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 style="margin: 0;">✏️ Редактирование игрока</h1>
+            <p style="color: var(--text-secondary); margin: 0.5rem 0 0 0;">
+                {{ player.username }} | ID: {{ player.id }}
+            </p>
+        </div>
+        <a href="{% url 'admin_panel:player_detail' player.id %}" class="btn btn-secondary">← Назад</a>
+    </div>
+</div>
+
+<div class="edit-grid">
+    <!-- Основная форма -->
+    <div class="main-content">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Основная информация -->
+            <div class="card">
+                <h2>👤 Основная информация</h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="username">Имя пользователя *</label>
+                        <input type="text" id="username" name="username" 
+                               value="{{ player.username }}" required class="form-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="role">Роль</label>
+                        <select id="role" name="role" class="form-input">
+                            <option value="player" {% if player.role == 'player' %}selected{% endif %}>👤 Игрок</option>
+                            <option value="captain" {% if player.role == 'captain' %}selected{% endif %}>⭐ Капитан</option>
+                            <option value="admin" {% if player.role == 'admin' %}selected{% endif %}>🛡️ Администратор</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="first_name">Имя</label>
+                        <input type="text" id="first_name" name="first_name" 
+                               value="{{ player.first_name }}" class="form-input"
+                               placeholder="Введите имя">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="last_name">Фамилия</label>
+                        <input type="text" id="last_name" name="last_name" 
+                               value="{{ player.last_name }}" class="form-input"
+                               placeholder="Введите фамилию">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" 
+                           value="{{ player.email }}" class="form-input"
+                           placeholder="email@example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="discord_username">Discord</label>
+                    <input type="text" id="discord_username" name="discord_username" 
+                           value="{{ player.discord_username }}" class="form-input"
+                           placeholder="username#0000">
+                </div>
+                
+                <div class="form-group">
+                    <label for="bio">О себе</label>
+                    <textarea id="bio" name="bio" rows="3" class="form-input"
+                              placeholder="Краткая информация об игроке...">{{ player.bio }}</textarea>
+                </div>
+            </div>
+            
+            <!-- Аватар -->
+            <div class="card">
+                <h2>🖼️ Аватар</h2>
+                
+                <div class="avatar-section">
+                    <div class="current-avatar">
+                        {% if player.avatar %}
+                        <img src="{{ player.avatar.url }}" alt="{{ player.username }}">
+                        {% else %}
+                        <div class="avatar-placeholder">{{ player.username|slice:":1"|upper }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="avatar-upload">
+                        <label for="avatar" class="upload-label">
+                            <span class="upload-icon">📁</span>
+                            <span>Выбрать файл</span>
+                        </label>
+                        <input type="file" id="avatar" name="avatar" accept="image/*" class="file-input">
+                        <p class="upload-hint">JPG, PNG или GIF. Максимум 2MB.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Права доступа -->
+            <div class="card">
+                <h2>🔐 Права доступа</h2>
+                
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="is_active" {% if player.is_active %}checked{% endif %}>
+                        <span class="checkbox-custom"></span>
+                        <span class="checkbox-text">
+                            <strong>Активный пользователь</strong>
+                            <small>Неактивные пользователи не могут войти в систему</small>
+                        </span>
+                    </label>
+                    
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="is_staff" {% if player.is_staff %}checked{% endif %}>
+                        <span class="checkbox-custom"></span>
+                        <span class="checkbox-text">
+                            <strong>Доступ к Django Admin</strong>
+                            <small>Даёт доступ к стандартной админ-панели Django</small>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Кнопки действий -->
+            <div class="card actions-card">
+                <a href="{% url 'admin_panel:player_detail' player.id %}" class="btn btn-secondary">
+                    Отмена
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    💾 Сохранить изменения
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Боковая панель -->
+    <div class="sidebar">
+        <!-- Информация -->
+        <div class="card info-card">
+            <h3>📋 Информация</h3>
+            
+            <div class="info-list">
+                <div class="info-item">
+                    <span class="info-label">ID</span>
+                    <span class="info-value">{{ player.id }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Регистрация</span>
+                    <span class="info-value">{{ player.date_joined|date:"d.m.Y" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Последний вход</span>
+                    <span class="info-value">{{ player.last_login|date:"d.m.Y H:i"|default:"Никогда" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Discord</span>
+                    <span class="info-value">{{ player.discord_username|default:"—" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Email</span>
+                    <span class="info-value">{{ player.email|default:"—" }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Опасная зона -->
+        <div class="card danger-card">
+            <h3>⚠️ Опасная зона</h3>
+            
+            <p class="danger-text">
+                Действия в этом разделе необратимы. Будьте внимательны.
+            </p>
+            
+            {% if player.is_superuser %}
+            <button type="button" class="btn btn-danger-outline" disabled>
+                🗑️ Удалить пользователя
+            </button>
+            <p class="danger-hint">Суперпользователя нельзя удалить</p>
+            
+            {% elif player.id == request.user.id %}
+            <button type="button" class="btn btn-danger-outline" disabled>
+                🗑️ Удалить пользователя
+            </button>
+            <p class="danger-hint">Вы не можете удалить свой аккаунт</p>
+            
+            {% else %}
+            <form method="post" action="{% url 'admin_panel:user_delete' player.id %}" 
+                  onsubmit="return confirm('⚠️ ВЫ УВЕРЕНЫ?\n\nУдалить пользователя {{ player.username }}?\n\nБудут также удалены:\n• Вся статистика игрока\n• Членство в командах\n• Рейтинги\n\nЭто действие НЕЛЬЗЯ отменить!');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    🗑️ Удалить пользователя
+                </button>
+            </form>
+            <p class="danger-hint">Это действие удалит пользователя навсегда</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+/* Сетка страницы */
+.edit-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Форма */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.form-input:focus {
+    border-color: var(--accent);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+}
+
+.form-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
+textarea.form-input {
+    resize: vertical;
+    min-height: 80px;
+}
+
+select.form-input {
+    cursor: pointer;
+}
+
+/* Аватар */
+.avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.current-avatar {
+    flex-shrink: 0;
+}
+
+.current-avatar img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--accent);
+}
+
+.avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: white;
+}
+
+.avatar-upload {
+    flex: 1;
+}
+
+.upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--bg-secondary);
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.upload-label:hover {
+    border-color: var(--accent);
+    background: rgba(52, 152, 219, 0.1);
+}
+
+.upload-icon {
+    font-size: 1.2rem;
+}
+
+.file-input {
+    display: none;
+}
+
+.upload-hint {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* Чекбоксы */
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    cursor: pointer;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.checkbox-label:hover {
+    background: rgba(52, 152, 219, 0.1);
+}
+
+.checkbox-label input {
+    display: none;
+}
+
+.checkbox-custom {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    background: var(--card-bg);
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.checkbox-label input:checked + .checkbox-custom {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.checkbox-label input:checked + .checkbox-custom::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.checkbox-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.checkbox-text strong {
+    color: var(--text-primary);
+}
+
+.checkbox-text small {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+/* Кнопки действий */
+.actions-card {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+/* Информационная карточка */
+.info-card h3 {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+
+.info-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.info-value {
+    font-weight: 500;
+    text-align: right;
+    word-break: break-all;
+}
+
+/* Опасная зона */
+.danger-card {
+    border: 2px solid #e74c3c;
+    background: rgba(231, 76, 60, 0.05);
+}
+
+.danger-card h3 {
+    color: #e74c3c;
+    margin-bottom: 1rem;
+}
+
+.danger-text {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.btn-danger {
+    width: 100%;
+    padding: 0.75rem;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+.btn-danger-outline {
+    width: 100%;
+    padding: 0.75rem;
+    background: transparent;
+    color: #e74c3c;
+    border: 2px solid #e74c3c;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.danger-hint {
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    color: #e74c3c;
+    text-align: center;
+}
+
+/* Адаптивность */
+@media (max-width: 992px) {
+    .edit-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .sidebar {
+        order: -1;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 576px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .avatar-section {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .actions-card {
+        flex-direction: column;
+    }
+    
+    .actions-card .btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}

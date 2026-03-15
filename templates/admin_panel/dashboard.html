@@ -1,0 +1,85 @@
+<!-- templates/admin_panel/dashboard.html -->
+{% extends 'base.html' %}
+
+{% block title %}Админ-панель | Tournament Platform{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1 style="margin-bottom: 1rem;">⚙️ Панель администратора</h1>
+    <p style="color: var(--text-secondary);">Добро пожаловать, {{ user.username }}!</p>
+</div>
+
+<!-- Статистика -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="card" style="text-align: center;">
+        <h3 class="card-title">🏆 Активные турниры</h3>
+        <div class="stat-value">{{ stats.active_tournaments }}</div>
+        <a href="{% url 'admin_panel:tournament_list' %}" class="btn btn-primary" style="margin-top: 1rem;">Управление</a>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <h3 class="card-title">👥 Команды</h3>
+        <div class="stat-value">{{ stats.total_teams }}</div>
+        <a href="{% url 'admin_panel:team_list' %}" class="btn btn-primary" style="margin-top: 1rem;">Управление</a>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <h3 class="card-title">👤 Игроки</h3>
+        <div class="stat-value">{{ stats.total_players }}</div>
+        <a href="{% url 'admin_panel:player_list' %}" class="btn btn-primary" style="margin-top: 1rem;">Управление</a>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <h3 class="card-title">⚽ Ожидают проведения</h3>
+        <div class="stat-value">{{ stats.pending_matches }}</div>
+        <a href="{% url 'admin_panel:match_list' %}" class="btn btn-primary" style="margin-top: 1rem;">Управление</a>
+    </div>
+</div>
+
+<!-- Быстрые действия -->
+<div class="card">
+    <h2 class="card-title">Быстрые действия</h2>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <a href="{% url 'admin_panel:season_list' %}" class="btn btn-primary">📅 Управление сезонами</a>
+        <a href="{% url 'admin_panel:tournament_create' %}" class="btn btn-primary">➕ Создать турнир</a>
+        <a href="{% url 'admin_panel:team_create' %}" class="btn btn-primary">➕ Добавить команду</a>
+        <a href="{% url 'admin_panel:match_create' %}" class="btn btn-primary">➕ Запланировать матч</a>
+        <a href="{% url 'admin_panel:user_roles' %}" class="btn btn-secondary">🔐 Управление ролями</a>
+        <a href="{% url 'admin_panel:appeals_list' %}" class="btn btn-secondary">📋 Апелляции</a>
+        <a href="/admin/" class="btn btn-secondary">🔧 Django Admin</a>
+    </div>
+</div>
+
+<!-- Последние матчи для подтверждения -->
+{% if recent_matches %}
+<div class="card">
+    <h2 class="card-title">Матчи ожидают подтверждения результата</h2>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Дата</th>
+                    <th>Турнир</th>
+                    <th>Матч</th>
+                    <th>Счёт</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for match in recent_matches %}
+                <tr>
+                    <td>{{ match.scheduled_time|date:"d.m.Y H:i" }}</td>
+                    <td>{{ match.tournament.name }}</td>
+                    <td>{{ match.team1.name }} vs {{ match.team2.name }}</td>
+                    <td>{{ match.score_team1|default:"-" }} : {{ match.score_team2|default:"-" }}</td>
+                    <td>
+                        <a href="{% url 'admin_panel:match_detail' match.id %}" class="btn btn-secondary" style="padding: 0.3rem 0.8rem;">Детали</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

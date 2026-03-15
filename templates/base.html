@@ -1,0 +1,614 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Tournament Platform{% endblock %}</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+/* Обложки турниров 1:1 */
+.tournament-logo, .tournament-card img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* В архиве */
+.tournament-archive-card img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* На главной и списке */
+.card img[alt*="tournament"], 
+.card img[src*="tournament_logos"] {
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+}
+        :root {
+            --primary-bg: #1a1a2e;
+            --secondary-bg: #16213e;
+            --card-bg: #0f3460;
+            --accent: #e94560;
+            --text-primary: #ffffff;
+            --text-secondary: #a8b2d1;
+            --border: #2c3e50;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Хедер */
+        header {
+            background: var(--secondary-bg);
+            padding: 1rem 0;
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            flex-shrink: 0;
+        }
+
+        .header-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--text-primary);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        nav a:hover {
+            background: var(--card-bg);
+            color: var(--accent);
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            width: 250px;
+        }
+
+        .user-menu {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #d63851;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--card-bg);
+            color: var(--text-primary);
+        }
+
+        /* Основной контент */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 250px 1fr 300px;
+            gap: 2rem;
+            flex: 1 0 auto;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Карточки */
+        .card {
+            background: var(--secondary-bg);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--accent);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        /* Турнирная таблица */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--secondary-bg);
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--card-bg);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: var(--card-bg);
+        }
+
+        .position {
+            font-weight: bold;
+            width: 50px;
+            text-align: center;
+        }
+
+        .team-name {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .team-logo {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+        }
+
+        /* Зоны таблицы */
+        .zone-promotion {
+            border-left: 4px solid #4CAF50;
+        }
+
+        .zone-playoffs {
+            border-left: 4px solid #2196F3;
+        }
+
+        .zone-relegation {
+            border-left: 4px solid #f44336;
+        }
+
+        .zone-tiebreaker {
+            border-left: 4px solid #FF9800;
+        }
+
+        /* Матч карточка */
+        .match-card {
+            background: var(--card-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr 2fr;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .match-team {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .match-team.away {
+            flex-direction: row-reverse;
+            text-align: right;
+        }
+
+        .match-score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            color: var(--accent);
+        }
+
+        .match-time {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Сайдбар */
+        .sidebar {
+            position: sticky;
+            top: 80px;
+            height: fit-content;
+        }
+
+        .sidebar-item {
+            background: var(--secondary-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .sidebar-title {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+
+        .sidebar-link {
+            display: block;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.5rem;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .sidebar-link:hover {
+            background: var(--card-bg);
+            color: var(--text-primary);
+        }
+
+        /* Сетка плей-офф */
+        .bracket {
+            display: flex;
+            gap: 3rem;
+            overflow-x: auto;
+            padding: 2rem 0;
+        }
+
+        .bracket-round {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            min-width: 200px;
+        }
+
+        .bracket-match {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border: 1px solid var(--border);
+        }
+
+        .bracket-team {
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .bracket-team:last-child {
+            border-bottom: none;
+        }
+
+        .bracket-team.winner {
+            background: rgba(233, 69, 96, 0.2);
+        }
+
+        /* Профиль игрока */
+        .profile-header {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 3px solid var(--accent);
+        }
+
+        .profile-info h1 {
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-box {
+            background: var(--secondary-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Футер */
+        footer {
+            background: var(--secondary-bg);
+            padding: 2rem 0;
+            margin-top: auto;
+            border-top: 2px solid var(--border);
+            text-align: center;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        /* Формы */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        /* Переключатель темы */
+        .theme-toggle {
+            background: var(--card-bg);
+            border: none;
+            color: var(--text-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Светлая тема */
+        body.light-theme {
+            --primary-bg: #f5f7fa;
+            --secondary-bg: #ffffff;
+            --card-bg: #e8ecf1;
+            --accent: #e94560;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --border: #dfe6e9;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .match-card {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .match-team.away {
+                flex-direction: row;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Хедер -->
+    <header>
+        <div class="header-container">
+            <a href="{% url 'tournaments:index' %}" class="logo">🏆 Tournament Platform</a>
+            
+<nav>
+    <a href="{% url 'tournaments:tournament_list' %}">Турниры</a>
+    
+    <!-- ИСПРАВЛЕНО: Разная кнопка для разных ролей -->
+    {% if user.is_authenticated %}
+        {% if user.role in 'player,captain' %}
+            <!-- Игроки и капитаны видят кнопку "Команды" с возможностью создания -->
+            <a href="{% url 'teams:team_list' %}">Команды</a>
+        {% else %}
+            <!-- Админы и модераторы видят просто список команд -->
+            <a href="{% url 'teams:team_list' %}">Команды</a>
+        {% endif %}
+    {% else %}
+        <!-- Неавторизованные видят только список команд -->
+        <a href="{% url 'teams:team_list' %}">Команды</a>
+    {% endif %}
+    
+    <a href="{% url 'ratings:player_ratings' %}">Рейтинг игроков</a>
+    <a href="{% url 'shop:index' %}">🛒 Магазин</a>
+    
+    {% if user.is_authenticated %}
+        {% if user.is_staff or user.is_superuser %}
+            <a href="{% url 'admin_panel:dashboard' %}" style="color: var(--accent); font-weight: bold;">
+                ⚙️ Админ-панель
+            </a>
+        {% endif %}
+        
+        {% if user.role == 'captain' or user.captained_teams.exists %}
+            <a href="{% url 'teams:captain_dashboard' %}" style="color: var(--accent);">
+                🛡️ Панель капитана
+            </a>
+        {% endif %}
+    {% endif %}
+</nav>
+            
+            <div class="user-menu">
+                <div class="search-box">
+                    <form action="{% url 'tournaments:search' %}" method="get">
+                        <input type="text" name="q" placeholder="Поиск..." />
+                    </form>
+                </div>
+                
+                <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+                
+                {% if user.is_authenticated %}
+                    <a href="{% url 'accounts:profile' user.username %}" class="btn btn-secondary">
+                        {{ user.username }}
+                    </a>
+                    <a href="{% url 'accounts:logout' %}" class="btn btn-secondary">Выход</a>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="btn btn-primary">Вход</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Основной контент -->
+    <div class="container">
+        <!-- Левый сайдбар -->
+        <aside class="sidebar">
+            <div class="sidebar-item">
+                <div class="sidebar-title">Навигация</div>
+                <a href="{% url 'tournaments:tournament_list' %}" class="sidebar-link">📋 Все турниры</a>
+                <a href="{% url 'teams:team_list' %}" class="sidebar-link">👥 Команды</a>
+                <a href="{% url 'ratings:player_ratings' %}" class="sidebar-link">⭐ Рейтинг игроков</a>
+                <a href="{% url 'ratings:team_ratings' %}" class="sidebar-link">🏅 Рейтинг команд</a>
+                <a href="{% url 'tournaments:archive' %}" class="sidebar-link">📚 Архив</a>
+                <a href="{% url 'shop:index' %}" class="sidebar-link">🛒 Магазин</a>
+            </div>
+            
+            {% block left_sidebar %}{% endblock %}
+        </aside>
+
+        <!-- Центральный контент -->
+        <main>
+            <!-- ДОБАВЛЕНО: Вывод сообщений Django -->
+            {% if messages %}
+                <div style="margin-bottom: 1rem;">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}" style="padding: 1rem; margin-bottom: 0.5rem; border-radius: 8px; background: {% if message.tags == 'error' %}#f44336{% elif message.tags == 'success' %}#4CAF50{% elif message.tags == 'warning' %}#ff9800{% else %}#2196F3{% endif %}; color: white;">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Правый сайдбар -->
+        <aside class="sidebar">
+            {% block right_sidebar %}
+            <div class="sidebar-item">
+                <div class="sidebar-title">Онлайн сейчас</div>
+                <p style="color: var(--text-secondary);">Пользователей: {{ online_count|default:0 }}</p>
+            </div>
+            {% endblock %}
+        </aside>
+    </div>
+
+    <!-- Футер -->
+    <footer>
+        <p>&copy; 2025 Tournament Platform. Все права защищены.</p>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+            const theme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+            localStorage.setItem('theme', theme);
+        }
+
+        // Загружаем сохранённую тему
+        document.addEventListener('DOMContentLoaded', function() {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'light') {
+                document.body.classList.add('light-theme');
+            }
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

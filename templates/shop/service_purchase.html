@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Оформление заказа: {{ service.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+    <!-- Навигация -->
+    <div class="mb-6">
+        <a href="{% url 'shop:service_detail' service.id %}" class="text-blue-600 hover:underline">← Назад к услуге</a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-8">
+        <h1 class="text-3xl font-bold mb-6">Оформление заказа</h1>
+
+        <!-- Информация об услуге -->
+        <div class="bg-gray-50 rounded-lg p-6 mb-8">
+            <h2 class="font-bold text-lg mb-3">{{ service.name }}</h2>
+            <p class="text-gray-700 mb-4">{{ service.description|truncatewords:30 }}</p>
+            
+            <div class="flex items-center gap-4 text-sm">
+                <span class="px-3 py-1 rounded-full
+                    {% if service.processing_type == 'auto' %}bg-green-100 text-green-800
+                    {% else %}bg-blue-100 text-blue-800{% endif %}">
+                    {% if service.processing_type == 'auto' %}🤖 Автоматическая{% else %}👤 Ручная обработка{% endif %}
+                </span>
+                <span class="text-gray-600">💰 Бесплатно</span>
+            </div>
+        </div>
+
+        <!-- Форма заказа -->
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Дополнительные поля в зависимости от услуги -->
+            {% if service.auto_action == 'change_nickname' %}
+            <div>
+                <label class="block font-medium mb-2">Новый никнейм</label>
+                <input type="text" name="new_nickname" required 
+                       class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                       placeholder="Введите новый никнейм">
+                <p class="text-sm text-gray-600 mt-2">Никнейм должен быть уникальным</p>
+            </div>
+            {% endif %}
+
+            <!-- Подтверждение -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-start gap-3">
+                    <input type="checkbox" id="confirm" required class="mt-1">
+                    <label for="confirm" class="text-sm text-gray-700">
+                        Я подтверждаю, что ознакомлен с условиями предоставления услуги
+                        {% if service.processing_type == 'manual' %}
+                        и понимаю, что обработка заказа может занять до 24 часов
+                        {% endif %}
+                    </label>
+                </div>
+            </div>
+
+            <!-- Информация о процессе -->
+            <div class="border-t pt-6">
+                <h3 class="font-bold mb-3">Что произойдет после оформления:</h3>
+                {% if service.processing_type == 'auto' %}
+                <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                    <li>Заказ будет обработан автоматически</li>
+                    <li>Изменения вступят в силу мгновенно</li>
+                    <li>Вы получите уведомление о выполнении</li>
+                </ol>
+                {% else %}
+                <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                    <li>Будет создан тикет для администратора</li>
+                    <li>Вы сможете отслеживать статус в разделе "Мои тикеты"</li>
+                    <li>Администратор обработает запрос в течение 24 часов</li>
+                    <li>После выполнения вы получите уведомление</li>
+                </ol>
+                {% endif %}
+            </div>
+
+            <!-- Кнопки -->
+            <div class="flex gap-4">
+                <button type="submit" 
+                        class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition">
+                    Оформить заказ
+                </button>
+                <a href="{% url 'shop:service_detail' service.id %}" 
+                   class="flex-1 text-center border border-gray-300 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition">
+                    Отмена
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

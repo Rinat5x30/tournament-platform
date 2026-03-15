@@ -1,0 +1,101 @@
+
+<!-- templates/tournaments/tournament_detail.html -->
+{% extends 'base.html' %}
+
+{% block title %}{{ tournament.name }} | Tournament Platform{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; gap: 2rem; align-items: start;">
+        {% if tournament.logo %}
+        <img src="{{ tournament.logo.url }}" alt="{{ tournament.name }}" style="width: 150px; height: 150px; border-radius: 10px; object-fit: cover;">
+        {% endif %}
+        <div style="flex: 1;">
+            <h1 style="margin-bottom: 0.5rem;">{{ tournament.name }}</h1>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">{{ tournament.season.name }}</p>
+            
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <span style="background: var(--accent); padding: 0.5rem 1rem; border-radius: 20px;">
+                    {{ tournament.get_status_display }}
+                </span>
+                <span style="background: var(--card-bg); padding: 0.5rem 1rem; border-radius: 20px;">
+                    {{ tournament.get_stage_type_display }}
+                </span>
+            </div>
+            
+            <p>{{ tournament.description }}</p>
+            
+            <div style="margin-top: 1rem;">
+                <strong>Период:</strong> {{ tournament.start_date|date:"d.m.Y" }} 
+                {% if tournament.end_date %}- {{ tournament.end_date|date:"d.m.Y" }}{% endif %}
+            </div>
+            
+            {% if tournament.stream_url %}
+            <a href="{{ tournament.stream_url }}" target="_blank" class="btn btn-primary" style="margin-top: 1rem;">
+                🔴 Смотреть трансляцию
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+    <a href="{% url 'tournaments:tournament_detail' tournament.slug %}" class="btn btn-secondary">Обзор</a>
+    <a href="{% url 'tournaments:tournament_table' tournament.slug %}" class="btn btn-secondary">Таблица</a>
+    <a href="{% url 'tournaments:tournament_schedule' tournament.slug %}" class="btn btn-secondary">Расписание</a>
+    {% if tournament.stage_type == 'single_elimination' or tournament.stage_type == 'double_elimination' %}
+    <a href="{% url 'tournaments:tournament_bracket' tournament.slug %}" class="btn btn-secondary">Сетка</a>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2 class="card-title">Участники ({{ participants.count }})</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
+        {% for participant in participants %}
+        <a href="{% url 'teams:team_detail' participant.team.slug %}" style="text-decoration: none; color: inherit;">
+            <div style="background: var(--card-bg); padding: 1rem; border-radius: 8px; text-align: center; transition: transform 0.2s;">
+                {% if participant.team.logo %}
+                <img src="{{ participant.team.logo.url }}" alt="{{ participant.team.name }}" style="width: 60px; height: 60px; border-radius: 50%; margin-bottom: 0.5rem;">
+                {% endif %}
+                <div style="font-weight: 600;">{{ participant.team.name }}</div>
+                {% if participant.seed %}
+                <div style="color: var(--text-secondary); font-size: 0.9rem;">Посев: {{ participant.seed }}</div>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <h2 class="card-title">Ближайшие матчи</h2>
+    {% for match in matches|slice:":5" %}
+    <div class="match-card">
+        <div class="match-team">
+            {% if match.team1.logo %}
+            <img src="{{ match.team1.logo.url }}" class="team-logo" alt="{{ match.team1.name }}">
+            {% endif %}
+            <span>{{ match.team1.name }}</span>
+        </div>
+        <div>
+            {% if match.status == 'finished' %}
+            <div class="match-score">{{ match.score_team1 }} : {{ match.score_team2 }}</div>
+            {% else %}
+            <div class="match-time">{{ match.scheduled_time|date:"d.m.Y H:i" }}</div>
+            {% endif %}
+            <div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+                {{ match.stage.name }} • Тур {{ match.round_number }}
+            </div>
+        </div>
+        <div class="match-team away">
+            {% if match.team2.logo %}
+            <img src="{{ match.team2.logo.url }}" class="team-logo" alt="{{ match.team2.name }}">
+            {% endif %}
+            <span>{{ match.team2.name }}</span>
+        </div>
+    </div>
+    {% empty %}
+    <p style="color: var(--text-secondary);">Матчи пока не запланированы</p>
+    {% endfor %}
+</div>
+{% endblock %}

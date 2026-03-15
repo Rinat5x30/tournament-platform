@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% block title %}Управление сезонами{% endblock %}
+
+{% block extra_css %}
+<style>
+    .seasons-page { max-width: 900px; margin: 0 auto; }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    
+    .page-header h1 { color: var(--text-primary); margin: 0; font-size: 1.8rem; }
+    
+    .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-primary { background: linear-gradient(135deg, #e94560, #c73e54); color: #fff; }
+    .btn-primary:hover { transform: translateY(-2px); }
+    .btn-secondary { background: var(--card-bg); color: var(--text-primary); }
+    .btn-sm { padding: 6px 12px; font-size: 13px; }
+    .btn-outline-primary { background: transparent; border: 1px solid #e94560; color: #e94560; }
+    .btn-outline-danger { background: transparent; border: 1px solid #f44336; color: #f44336; }
+    
+    .card {
+        background: var(--secondary-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table th {
+        text-align: left;
+        padding: 14px 16px;
+        background: var(--card-bg);
+        color: #e94560;
+        font-size: 12px;
+        text-transform: uppercase;
+    }
+    
+    .data-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text-primary);
+    }
+    
+    .data-table tr:hover td { background: var(--card-bg); }
+    
+    .badge {
+        padding: 4px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .badge-success { background: rgba(76,175,80,0.2); color: #4CAF50; }
+    .badge-secondary { background: var(--card-bg); color: var(--text-secondary); }
+    
+    .text-muted { color: var(--text-secondary); }
+    
+    .btn-group { display: flex; gap: 6px; }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-secondary);
+    }
+    
+    .empty-state .icon { font-size: 4rem; margin-bottom: 16px; opacity: 0.5; }
+    
+    .actions { margin-top: 20px; }
+    
+    /* Модалка */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-overlay.active { display: flex; }
+    
+    .modal-box {
+        background: var(--secondary-bg);
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 400px;
+        width: 90%;
+    }
+    
+    .modal-box h5 { color: var(--text-primary); margin: 0 0 16px; }
+    .modal-box p { color: var(--text-secondary); margin-bottom: 20px; }
+    .modal-box small { color: #f44336; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="seasons-page">
+    <div class="page-header">
+        <h1>📅 Управление сезонами</h1>
+        <a href="{% url 'admin_panel:season_create' %}" class="btn btn-primary">➕ Создать сезон</a>
+    </div>
+
+    <div class="card">
+        {% if seasons %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Начало</th>
+                        <th>Окончание</th>
+                        <th>Статус</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for season in seasons %}
+                    <tr>
+                        <td>
+                            <strong>{{ season.name }}</strong>
+                            {% if season.is_active %}<span class="badge badge-success" style="margin-left:8px">Активный</span>{% endif %}
+                        </td>
+                        <td>{{ season.start_date|date:"d.m.Y" }}</td>
+                        <td>{{ season.end_date|date:"d.m.Y"|default:'<span class="text-muted">—</span>' }}</td>
+                        <td>
+                            {% if season.is_active %}
+                                <span class="badge badge-success">Активный</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Завершён</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'admin_panel:season_edit' season.id %}" class="btn btn-sm btn-outline-primary">✏️</a>
+                                <button class="btn btn-sm btn-outline-danger" onclick="showDeleteModal({{ season.id }}, '{{ season.name }}')">🗑</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty-state">
+                <div class="icon">📅</div>
+                <p>Сезоны не найдены</p>
+                <a href="{% url 'admin_panel:season_create' %}" class="btn btn-primary">Создать первый сезон</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="actions">
+        <a href="{% url 'admin_panel:dashboard' %}" class="btn btn-secondary">← Назад</a>
+    </div>
+</div>
+
+<!-- Модалка удаления -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+        <h5>Подтверждение удаления</h5>
+        <p>Удалить сезон "<span id="seasonName"></span>"?<br><small>Это действие нельзя отменить!</small></p>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="hideDeleteModal()">Отмена</button>
+            <form method="post" id="deleteForm" style="display:inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary" style="background:#f44336">Удалить</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function showDeleteModal(id, name) {
+    document.getElementById('seasonName').textContent = name;
+    document.getElementById('deleteForm').action = "{% url 'admin_panel:season_delete' 0 %}".replace('0', id);
+    document.getElementById('deleteModal').classList.add('active');
+}
+function hideDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('active');
+}
+</script>
+{% endblock %}

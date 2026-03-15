@@ -1,0 +1,93 @@
+
+<!-- templates/tournaments/tournament_table.html -->
+{% extends 'base.html' %}
+
+{% block title %}Таблица {{ tournament.name }} | Tournament Platform{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1 style="margin-bottom: 1rem;">{{ tournament.name }}</h1>
+    <p style="color: var(--text-secondary);">{{ tournament.season.name }}</p>
+</div>
+
+{% if stages.count > 1 %}
+<div class="card">
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        {% for s in stages %}
+        <a href="{% url 'tournaments:tournament_table_stage' tournament.slug s.id %}" 
+           class="btn {% if s.id == stage.id %}btn-primary{% else %}btn-secondary{% endif %}">
+            {{ s.name }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <h2 class="card-title">{{ stage.name }}</h2>
+    
+    {% if zones %}
+    <div style="margin-bottom: 1rem; padding: 1rem; background: var(--card-bg); border-radius: 8px;">
+        <strong>Легенда зон:</strong>
+        <div style="display: flex; gap: 2rem; flex-wrap: wrap; margin-top: 0.5rem;">
+            {% for zone in zones %}
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="width: 20px; height: 20px; background: {{ zone.color }}; border-radius: 3px;"></div>
+                <span>{{ zone.name }} ({{ zone.start_position }}-{{ zone.end_position }})</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th class="position">#</th>
+                    <th>Команда</th>
+                    <th style="text-align: center;">И</th>
+                    <th style="text-align: center;">В</th>
+                    <th style="text-align: center;">Н</th>
+                    <th style="text-align: center;">П</th>
+                    <th style="text-align: center;">ЗМ</th>
+                    <th style="text-align: center;">ПМ</th>
+                    <th style="text-align: center;">РМ</th>
+                    <th style="text-align: center;"><strong>О</strong></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in table %}
+                <tr {% for zone in zones %}{% if row.position >= zone.start_position and row.position <= zone.end_position %}class="zone-{{ zone.zone_type }}"{% endif %}{% endfor %}>
+                    <td class="position">{{ row.position }}</td>
+                    <td>
+                        <div class="team-name">
+                            {% if row.team.logo %}
+                            <img src="{{ row.team.logo.url }}" class="team-logo" alt="{{ row.team.name }}">
+                            {% endif %}
+                            <a href="{% url 'teams:team_detail' row.team.slug %}" style="color: inherit; text-decoration: none;">
+                                {{ row.team.name }}
+                            </a>
+                        </div>
+                    </td>
+                    <td style="text-align: center;">{{ row.matches }}</td>
+                    <td style="text-align: center;">{{ row.wins }}</td>
+                    <td style="text-align: center;">{{ row.draws }}</td>
+                    <td style="text-align: center;">{{ row.losses }}</td>
+                    <td style="text-align: center;">{{ row.goals_for }}</td>
+                    <td style="text-align: center;">{{ row.goals_against }}</td>
+                    <td style="text-align: center;">{{ row.goal_diff|stringformat:"+d" }}</td>
+                    <td style="text-align: center;"><strong>{{ row.points }}</strong></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" style="text-align: center; color: var(--text-secondary);">
+                        Нет данных для отображения
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+<!-- Добавьте этот код в templates/admin_panel/team_detail.html -->
+<!-- В секцию с кнопками управления командой -->
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3>{{ team.name }}</h3>
+        <div>
+            <a href="{% url 'admin_panel:team_member_add' team.id %}" class="btn btn-success">
+                Добавить игрока
+            </a>
+            <a href="{% url 'admin_panel:team_list' %}" class="btn btn-secondary">
+                Назад к списку
+            </a>
+            <!-- ДОБАВЬТЕ ЭТУ КНОПКУ -->
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteTeamModal">
+                Удалить команду
+            </button>
+        </div>
+    </div>
+    <!-- ... остальной код ... -->
+</div>
+
+<!-- ДОБАВЬТЕ ЭТОТ МОДАЛЬНЫЙ ДИАЛОГ В КОНЕЦ ФАЙЛА -->
+<!-- Модальное окно подтверждения удаления -->
+<div class="modal fade" id="deleteTeamModal" tabindex="-1" aria-labelledby="deleteTeamModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteTeamModalLabel">Удаление команды</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Вы уверены, что хотите удалить команду "{{ team.name }}"?</strong></p>
+                <p>Будут также удалены:</p>
+                <ul>
+                    <li>{{ members.count }} игроков в составе</li>
+                    <li>Все матчи команды</li>
+                    <li>Участие в турнирах</li>
+                    <li>Рейтинги и статистика</li>
+                </ul>
+                <p class="text-danger"><strong>Это действие нельзя отменить!</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <form method="post" action="{% url 'admin_panel:team_delete' team.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Да, удалить команду</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

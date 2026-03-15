@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Регистрация на турнир{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3>Регистрация на турнир</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Информация о турнире -->
+                    <div class="tournament-info mb-4">
+                        <h4>{{ tournament.name }}</h4>
+                        {% if tournament.logo %}
+                            <img src="{{ tournament.logo.url }}" alt="{{ tournament.name }}" 
+                                 class="img-fluid mb-3" style="max-height: 200px;">
+                        {% endif %}
+                        <p>{{ tournament.description }}</p>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Начало:</strong> {{ tournament.start_date|date:"d.m.Y" }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Тип:</strong> {{ tournament.get_stage_type_display }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Регистрация до:</strong> {{ tournament.registration_end|date:"d.m.Y" }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Участников:</strong> {{ tournament.participants.count }}/{{ tournament.max_teams }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Информация о команде -->
+                    <div class="alert alert-info">
+                        <h5>Ваша команда: {{ team.name }}</h5>
+                        <p>Участников в составе: {{ team.members.count }}</p>
+                    </div>
+                    
+                    <!-- Форма подтверждения -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="alert alert-warning">
+                            <strong>Внимание!</strong> Регистрируя команду, вы подтверждаете, что:
+                            <ul class="mb-0">
+                                <li>Ваша команда готова к участию в турнире</li>
+                                <li>Все игроки ознакомлены с правилами</li>
+                                <li>Вы обязуетесь участвовать во всех матчах</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'teams:captain_dashboard' %}" class="btn btn-secondary">
+                                Отмена
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                Зарегистрировать команду
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Карьера {{ player.username }} | Tournament Platform{% endblock %}
+
+{% block content %}
+<style>
+    .career-header {
+        background: linear-gradient(135deg, var(--card-bg) 0%, var(--secondary-bg) 100%);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+    }
+    
+    .season-card {
+        background: var(--secondary-bg);
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid var(--accent);
+    }
+    
+    .career-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+</style>
+
+<div class="career-header">
+    <div style="width: 100px; height: 100px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 3rem;">
+        👤
+    </div>
+    <div>
+        <h1>Карьера игрока</h1>
+        <h2 style="color: var(--accent);">{{ player.username }}</h2>
+        <p style="color: var(--text-secondary);">История выступлений по сезонам</p>
+    </div>
+</div>
+
+{% if career_by_season %}
+    {% for season_data in career_by_season %}
+        <div class="season-card">
+            <h2 style="margin-bottom: 1rem;">🏆 {{ season_data.season.name }}</h2>
+            
+            <div class="career-stats">
+                <div class="stat-box">
+                    <div class="stat-value">{{ season_data.matches }}</div>
+                    <div class="stat-label">Матчей</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">{{ season_data.goals }}</div>
+                    <div class="stat-label">Голов</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">{{ season_data.assists }}</div>
+                    <div class="stat-label">Передач</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">
+                        {% if season_data.rating %}
+                            {{ season_data.rating.rating|floatformat:0 }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                    <div class="stat-label">Рейтинг</div>
+                </div>
+            </div>
+            
+            {% if season_data.awards %}
+                <div style="margin-top: 1rem;">
+                    <h4>🏅 Награды:</h4>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                        {% for award in season_data.awards %}
+                            <span class="badge" style="background: gold; color: black; padding: 0.5rem 1rem;">
+                                {{ award.get_award_type_display }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="card text-center py-5">
+        <p style="color: var(--text-secondary); font-size: 1.2rem;">
+            Статистика по сезонам пока отсутствует
+        </p>
+    </div>
+{% endif %}
+
+<div class="mt-3">
+    <a href="{% url 'accounts:profile' player.username %}" class="btn btn-secondary">
+        ← Вернуться к профилю
+    </a>
+</div>
+{% endblock %}

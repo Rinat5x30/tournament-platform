@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Подать апелляцию на санкцию{% endblock %}
+
+{% block content %}
+<style>
+    .appeal-form-container {
+        max-width: 800px;
+        margin: 2rem auto;
+    }
+    
+    .appeal-header {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        border-left: 4px solid #ff9800;
+    }
+    
+    .sanction-info {
+        background: rgba(244, 67, 54, 0.1);
+        padding: 1.5rem;
+        border-radius: 8px;
+        border-left: 3px solid #f44336;
+        margin-bottom: 2rem;
+    }
+    
+    .form-section {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .form-group textarea,
+    .form-group input[type="text"],
+    .form-group input[type="file"] {
+        width: 100%;
+        padding: 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: var(--primary-bg);
+        color: var(--text-primary);
+        font-size: 1rem;
+    }
+    
+    .form-group textarea {
+        min-height: 150px;
+        resize: vertical;
+    }
+    
+    .form-group small {
+        display: block;
+        margin-top: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+    
+    .alert-info {
+        background: rgba(33, 150, 243, 0.1);
+        border-left: 4px solid #2196F3;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+</style>
+
+<div class="appeal-form-container">
+    <div class="appeal-header">
+        <h1>📝 Подача апелляции на санкцию</h1>
+        <p style="color: var(--text-secondary); margin: 0.5rem 0 0 0;">
+            Заполните форму для обжалования санкции
+        </p>
+    </div>
+    
+    <!-- Информация о санкции -->
+    <div class="sanction-info">
+        <h3 style="margin-top: 0; color: #f44336;">⚠️ Санкция</h3>
+        <p><strong>Тип:</strong> {{ sanction.get_sanction_type_display }}</p>
+        <p><strong>Причина:</strong> {{ sanction.reason }}</p>
+        <p><strong>Дата применения:</strong> {{ sanction.issued_at|date:"d.m.Y H:i" }}</p>
+        <p><strong>Турнир:</strong> {{ sanction.tournament.name }}</p>
+        {% if sanction.points_deducted > 0 %}
+            <p style="color: #f44336;"><strong>Снято очков:</strong> -{{ sanction.points_deducted }}</p>
+        {% endif %}
+    </div>
+    
+    <div class="alert-info">
+        <strong>ℹ️ Важная информация:</strong><br>
+        Апелляция будет рассмотрена администрацией в течение 3-5 дней. 
+        Предоставьте максимально подробные объяснения и доказательства вашей правоты.
+    </div>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- Причина апелляции -->
+        <div class="form-section">
+            <div class="form-group">
+                <label>Причина апелляции *</label>
+                <textarea name="reason" 
+                          required
+                          placeholder="Подробно опишите, почему вы считаете санкцию несправедливой. Укажите все обстоятельства дела."></textarea>
+                <small>
+                    Объясните ситуацию максимально подробно. Чем больше информации вы предоставите, 
+                    тем быстрее будет рассмотрена апелляция.
+                </small>
+            </div>
+        </div>
+        
+        <!-- Доказательства -->
+        <div class="form-section">
+            <h3 style="margin-top: 0;">Доказательства</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                Предоставьте доказательства вашей правоты (необязательно, но рекомендуется)
+            </p>
+            
+            <div class="form-group">
+                <label>Текстовое доказательство или ссылка</label>
+                <textarea name="evidence_text"
+                          placeholder="Например:&#10;- Ссылка на видео с записью матча: https://youtube.com/...&#10;- Ссылка на скриншоты: https://imgur.com/...&#10;- Описание свидетельских показаний"></textarea>
+                <small>
+                    Вы можете вставить ссылки на YouTube, Twitch, Discord, скриншоты или другие доказательства
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label>Или загрузите файл</label>
+                <input type="file" name="evidence_file" accept="image/*,video/*,.pdf">
+                <small>
+                    Поддерживаются изображения, видео и PDF файлы (макс. 10 МБ)
+                </small>
+            </div>
+        </div>
+        
+        <!-- Кнопки -->
+        <div style="display: flex; gap: 1rem;">
+            <a href="{% url 'accounts:profile' request.user.username %}" class="btn btn-secondary">
+                ← Отмена
+            </a>
+            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                📤 Подать апелляцию
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

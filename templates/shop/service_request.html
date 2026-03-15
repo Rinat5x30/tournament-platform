@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Запрос: {{ service.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .shop-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 24px 40px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .shop-header .breadcrumb { font-size: 14px; opacity: 0.9; }
+    .shop-header .breadcrumb a { color: white; text-decoration: none; }
+    
+    .content-grid { display: grid; grid-template-columns: 1fr 300px; gap: 24px; }
+    
+    .request-card {
+        background: var(--secondary-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 28px;
+    }
+    
+    .request-title { color: var(--text-primary); font-size: 1.4rem; margin: 0 0 8px; }
+    .request-subtitle { color: var(--text-secondary); margin-bottom: 24px; }
+    
+    .info-box { border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; font-size: 14px; }
+    .info-box.auto { background: rgba(33,150,243,0.1); border: 1px solid rgba(33,150,243,0.3); color: #1565c0; }
+    .info-box.manual { background: rgba(255,152,0,0.1); border: 1px solid rgba(255,152,0,0.3); color: #e65100; }
+    
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; font-size: 14px; }
+    .form-label small { font-weight: normal; color: var(--text-secondary); }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--primary-bg);
+        color: var(--text-primary);
+        font-size: 15px;
+        transition: border-color 0.3s;
+    }
+    
+    .form-control:focus { outline: none; border-color: #667eea; }
+    textarea.form-control { min-height: 100px; resize: vertical; }
+    .hint-text { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
+    
+    .form-actions { display: flex; gap: 12px; margin-top: 28px; }
+    
+    .btn-submit {
+        flex: 1;
+        padding: 14px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .btn-submit:hover { transform: translateY(-2px); }
+    
+    .btn-cancel {
+        padding: 14px 28px;
+        background: var(--card-bg);
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+    }
+    
+    .btn-cancel:hover { background: var(--border); color: var(--text-primary); }
+    
+    .sidebar-card {
+        background: var(--secondary-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 20px;
+        height: fit-content;
+    }
+    
+    .sidebar-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #667eea;
+    }
+    
+    .summary-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
+    .summary-row .label { color: var(--text-secondary); }
+    .summary-row .value { color: var(--text-primary); font-weight: 500; }
+    
+    .badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+    .badge-auto { background: rgba(76,175,80,0.2); color: #4CAF50; }
+    .badge-manual { background: rgba(255,152,0,0.2); color: #ff9800; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="shop-header">
+    <div class="breadcrumb"><a href="{% url 'shop:index' %}">Магазин</a> / <a href="{% url 'shop:service_detail' service.id %}">{{ service.name }}</a> / Запрос</div>
+</div>
+
+<div class="content-grid">
+    <div class="request-card">
+        <h1 class="request-title">📝 Запрос услуги</h1>
+        <p class="request-subtitle">{{ service.name }}</p>
+        
+        {% if service.processing_type == 'auto' %}
+        <div class="info-box auto">⚡ <strong>Автоматическая услуга.</strong> Выполнится сразу после отправки.</div>
+        {% else %}
+        <div class="info-box manual">⏳ <strong>Ручная обработка.</strong> Будет создан тикет. Обработка: 1-24 часа.</div>
+        {% endif %}
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if service.auto_action == 'change_nickname' %}
+            <div class="form-group">
+                <label class="form-label">Новый никнейм <small>(обязательно)</small></label>
+                <input type="text" name="new_nickname" class="form-control" placeholder="Введите никнейм" required minlength="3" maxlength="32">
+                <p class="hint-text">Минимум 3 символа, должен быть уникальным</p>
+            </div>
+            {% endif %}
+            
+            {% if service.processing_type == 'manual' %}
+            <div class="form-group">
+                <label class="form-label">Дополнительная информация <small>(необязательно)</small></label>
+                <textarea name="additional_info" class="form-control" placeholder="Детали запроса..."></textarea>
+                <p class="hint-text">Поможет ускорить обработку</p>
+            </div>
+            {% endif %}
+            
+            <div class="form-actions">
+                <a href="{% url 'shop:service_detail' service.id %}" class="btn-cancel">Отмена</a>
+                <button type="submit" class="btn-submit">{% if service.processing_type == 'auto' %}⚡ Выполнить{% else %}📤 Отправить{% endif %}</button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="sidebar-card">
+        <h3 class="sidebar-title">📋 Информация</h3>
+        <div class="summary-row"><span class="label">Услуга</span><span class="value">{{ service.name }}</span></div>
+        <div class="summary-row"><span class="label">Категория</span><span class="value">{{ service.category.name }}</span></div>
+        <div class="summary-row">
+            <span class="label">Тип</span>
+            <span class="value">{% if service.processing_type == 'auto' %}<span class="badge badge-auto">Авто</span>{% else %}<span class="badge badge-manual">Ручная</span>{% endif %}</span>
+        </div>
+        {% if service.max_uses_per_user %}<div class="summary-row"><span class="label">Лимит</span><span class="value">{{ service.max_uses_per_user }} раз</span></div>{% endif %}
+        {% if service.cooldown_days %}<div class="summary-row"><span class="label">Ожидание</span><span class="value">{{ service.cooldown_days }} дней</span></div>{% endif %}
+    </div>
+</div>
+{% endblock %}

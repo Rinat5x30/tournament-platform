@@ -1,0 +1,66 @@
+<!-- templates/shop/admin/orders_list.html -->
+{% extends 'base.html' %}
+{% block title %}Управление заказами{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-3xl font-bold">📋 Управление заказами</h1>
+        <a href="{% url 'shop:admin_dashboard' %}" class="text-blue-600 hover:underline">← В админ-панель</a>
+    </div>
+
+    <!-- Фильтры -->
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+        <form method="get" class="flex gap-4 flex-wrap">
+            <select name="status" class="px-4 py-2 border rounded-lg">
+                <option value="">Все статусы</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Ожидает</option>
+                <option value="processing" {% if status_filter == 'processing' %}selected{% endif %}>В обработке</option>
+                <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Выполнено</option>
+                <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Отклонено</option>
+            </select>
+            <input type="text" name="user" placeholder="Поиск по пользователю" class="px-4 py-2 border rounded-lg">
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Применить</button>
+        </form>
+    </div>
+
+    <!-- Таблица заказов -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Пользователь</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Услуга</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Тип</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дата</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Действия</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for order in orders %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 font-medium">#{{ order.id }}</td>
+                    <td class="px-6 py-4">{{ order.user.username }}</td>
+                    <td class="px-6 py-4">{{ order.service.name }}</td>
+                    <td class="px-6 py-4">
+                        <span class="text-xs px-2 py-1 rounded {% if order.service.processing_type == 'auto' %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                            {{ order.service.get_processing_type_display }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 text-xs rounded-full {% if order.status == 'completed' %}bg-green-100 text-green-800{% elif order.status == 'pending' %}bg-yellow-100 text-yellow-800{% elif order.status == 'processing' %}bg-blue-100 text-blue-800{% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm">{{ order.created_at|date:"d.m.Y H:i" }}</td>
+                    <td class="px-6 py-4">
+                        <a href="{% url 'shop:admin_order_process' order.id %}" class="text-blue-600 hover:underline">Обработать</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block title %}Игроки - Админ-панель{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1>👤 Управление игроками</h1>
+            <p style="color: var(--text-secondary); margin: 0.5rem 0 0 0;">
+                Всего игроков: {{ players.count }}
+            </p>
+        </div>
+        <a href="{% url 'admin_panel:user_roles' %}" class="btn btn-primary">
+            🔐 Управление ролями
+        </a>
+    </div>
+</div>
+
+<!-- Фильтры -->
+<div class="card">
+    <h3 class="card-title">Фильтры</h3>
+    <form method="get" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem;">
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Поиск</label>
+            <input type="text" 
+                   name="search" 
+                   value="{{ search }}" 
+                   placeholder="Имя, Discord, Email..."
+                   class="form-control">
+        </div>
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Роль</label>
+            <select name="role" class="form-control">
+                <option value="">Все роли</option>
+                <option value="player" {% if role == 'player' %}selected{% endif %}>Игрок</option>
+                <option value="captain" {% if role == 'captain' %}selected{% endif %}>Капитан</option>
+                <!-- <option value="moderator" {% if role == 'moderator' %}selected{% endif %}>Модератор</option> -->
+                <option value="admin" {% if role == 'admin' %}selected{% endif %}>Администратор</option>
+            </select>
+        </div>
+        <div style="display: flex; align-items: flex-end; gap: 0.5rem;">
+            <button type="submit" class="btn btn-primary">Применить</button>
+            {% if search or role %}
+            <a href="{% url 'admin_panel:player_list' %}" class="btn btn-secondary">Сбросить</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Таблица игроков -->
+<div class="card">
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Игрок</th>
+                    <th>Discord</th>
+                    <th>Email</th>
+                    <th>Роль</th>
+                    <th>Матчей</th>
+                    <th>Статус</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player in players %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.8rem;">
+                            {% if player.avatar %}
+                                <img src="{{ player.avatar.url }}" 
+                                     style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" 
+                                     alt="{{ player.username }}">
+                            {% else %}
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--secondary-bg); display: flex; align-items: center; justify-content: center;">
+                                    👤
+                                </div>
+                            {% endif %}
+                            <div>
+                                <a href="{% url 'admin_panel:player_detail' player.id %}" 
+                                   style="color: var(--accent); text-decoration: none; font-weight: bold;">
+                                    {{ player.username }}
+                                </a>
+                                {% if player.get_full_name %}
+                                    <div style="color: var(--text-secondary); font-size: 0.85rem;">
+                                        {{ player.get_full_name }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if player.discord_username %}
+                            <span style="color: var(--text-secondary);">{{ player.discord_username }}</span>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if player.email %}
+                            <span style="color: var(--text-secondary);">{{ player.email }}</span>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if player.role == 'admin' %}
+                            <span style="background: #f44336; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; color: white;">
+                                Администратор
+                            </span>
+                        {% elif player.role == 'moderator' %}
+                            <!-- <span style="background: #ff9800; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; color: white;">
+                                Модератор
+                            </span> -->
+                        {% elif player.role == 'captain' %}
+                            <span style="background: #2196F3; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; color: white;">
+                                Капитан
+                            </span>
+                        {% else %}
+                            <span style="background: var(--card-bg); padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">
+                                Игрок
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        <span style="background: var(--card-bg); padding: 0.3rem 0.8rem; border-radius: 15px;">
+                            {{ player.matches_played }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if player.is_active %}
+                            <span style="background: #4CAF50; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; color: white;">
+                                ✓ Активен
+                            </span>
+                        {% else %}
+                            <span style="background: #757575; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; color: white;">
+                                ✗ Неактивен
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="{% url 'admin_panel:player_detail' player.id %}" 
+                               class="btn btn-secondary" 
+                               style="padding: 0.3rem 0.6rem;">
+                                👁️
+                            </a>
+                            <a href="{% url 'admin_panel:player_edit' player.id %}" 
+                               class="btn btn-primary" 
+                               style="padding: 0.3rem 0.6rem;">
+                                ✏️
+                            </a>
+                            
+                            <!-- Кнопка удаления -->
+                            {% if not player.is_superuser and player.id != request.user.id %}
+                                <form method="post" 
+                                      action="{% url 'admin_panel:user_delete' player.id %}" 
+                                      style="display: inline;" 
+                                      onsubmit="return confirm('Удалить пользователя {{ player.username }}?')">
+                                    {% csrf_token %}
+                                    <button type="submit" 
+                                            class="btn" 
+                                            style="padding: 0.3rem 0.6rem; background: #f44336; color: white;">
+                                        🗑️
+                                    </button>
+                                </form>
+                            {% else %}
+                                <button type="button" 
+                                        class="btn" 
+                                        style="padding: 0.3rem 0.6rem; background: #757575; color: white; opacity: 0.5; cursor: not-allowed;"
+                                        disabled
+                                        title="{% if player.is_superuser %}Суперпользователя нельзя удалить{% else %}Нельзя удалить себя{% endif %}">
+                                    🗑️
+                                </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                        {% if search or role %}
+                            Игроки не найдены
+                        {% else %}
+                            Нет игроков
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Информация -->
+<div class="card" style="background: var(--card-bg); border-left: 4px solid #2196F3;">
+    <h3 style="margin-bottom: 0.5rem;">💡 Информация</h3>
+    <ul style="color: var(--text-secondary); line-height: 1.8; margin: 0; padding-left: 1.5rem;">
+        <li>Суперпользователей нельзя удалить</li>
+        <li>Вы не можете удалить свой собственный аккаунт</li>
+        <li>При удалении игрока удаляется вся его статистика</li>
+        <li>Для временного отключения используйте деактивацию</li>
+    </ul>
+</div>
+{% endblock %}

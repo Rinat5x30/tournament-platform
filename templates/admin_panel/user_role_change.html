@@ -1,0 +1,65 @@
+
+<!-- templates/admin_panel/user_role_change.html -->
+{% extends 'base.html' %}
+
+{% block title %}Изменение роли | Админ-панель{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>✏️ Изменение роли пользователя</h1>
+    <a href="{% url 'admin_panel:user_roles' %}" class="btn btn-secondary">← Назад</a>
+</div>
+
+<div class="card">
+    <div style="background: var(--card-bg); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+        <h2 style="margin-bottom: 0.5rem;">{{ user.username }}</h2>
+        <p style="color: var(--text-secondary);">
+            Discord: {{ user.discord_username|default:"Не привязан" }}
+        </p>
+        <p style="color: var(--text-secondary);">
+            Текущая роль: <strong>{{ user.get_role_display }}</strong>
+        </p>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label>Выберите новую роль</label>
+            <select name="role" class="form-control" required>
+                <option value="player" {% if user.role == 'player' %}selected{% endif %}>👤 Игрок</option>
+                <option value="captain" {% if user.role == 'captain' %}selected{% endif %}>⭐ Капитан</option>
+                <!-- <option value="moderator" {% if user.role == 'moderator' %}selected{% endif %}>🛡️ Модератор</option> -->
+                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>👑 Администратор</option>
+            </select>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">💾 Сохранить</button>
+            <a href="{% url 'admin_panel:user_roles' %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text-primary);
+        font-size: 1rem;
+    }
+</style>
+{% endblock %}

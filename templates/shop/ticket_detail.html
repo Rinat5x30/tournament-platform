@@ -1,0 +1,640 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Тикет #{{ ticket.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .ticket-detail-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 20px;
+        transition: all 0.2s ease;
+    }
+    
+    .back-link:hover {
+        color: #764ba2;
+        transform: translateX(-3px);
+    }
+    
+    .ticket-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .ticket-title-section h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin: 0 0 10px 0;
+    }
+    
+    .ticket-meta-row {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    
+    .ticket-id {
+        color: #888;
+        font-size: 0.9rem;
+    }
+    
+    .category-badge {
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .category-request { background: #e3f2fd; color: #1565c0; }
+    .category-complaint { background: #fff3e0; color: #e65100; }
+    .category-purchase { background: #f3e5f5; color: #7b1fa2; }
+    
+    .priority-badge {
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .priority-low { background: #e8f5e9; color: #2e7d32; }
+    .priority-medium { background: #fff3e0; color: #e65100; }
+    .priority-high { background: #ffebee; color: #c62828; }
+    
+    .status-badge {
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    
+    .status-new { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); color: #2e7d32; }
+    .status-in_progress { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); color: #1565c0; }
+    .status-resolved { background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%); color: #616161; }
+    .status-rejected { background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); color: #c62828; }
+    
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 25px;
+    }
+    
+    .main-content {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    
+    .card-header {
+        padding: 18px 25px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .card-header h2 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1a1a2e;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .card-body {
+        padding: 25px;
+    }
+    
+    /* Описание тикета */
+    .ticket-description {
+        font-size: 1rem;
+        line-height: 1.7;
+        color: #333;
+        white-space: pre-wrap;
+    }
+    
+    /* Сообщения */
+    .messages-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .message-item {
+        display: flex;
+        gap: 12px;
+    }
+    
+    .message-item.admin {
+        flex-direction: row-reverse;
+    }
+    
+    .message-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+    
+    .message-item:not(.admin) .message-avatar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .message-item.admin .message-avatar {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+    
+    .message-bubble {
+        max-width: 75%;
+        padding: 12px 18px;
+        border-radius: 18px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+    
+    .message-item:not(.admin) .message-bubble {
+        background: #f0f2f5;
+        border-bottom-left-radius: 4px;
+    }
+    
+    .message-item.admin .message-bubble {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+    
+    .message-text {
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    
+    .message-meta {
+        font-size: 0.75rem;
+        margin-top: 5px;
+        opacity: 0.7;
+    }
+    
+    .message-item.admin .message-meta {
+        text-align: right;
+    }
+    
+    /* Форма ответа */
+    .reply-form {
+        display: flex;
+        gap: 10px;
+        padding-top: 15px;
+        border-top: 1px solid #f0f0f0;
+        margin-top: 15px;
+    }
+    
+    .reply-input {
+        flex: 1;
+        padding: 12px 18px;
+        border: 2px solid #e0e0e0;
+        border-radius: 25px;
+        font-size: 0.95rem;
+        resize: none;
+        transition: all 0.2s ease;
+        font-family: inherit;
+    }
+    
+    .reply-input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .reply-btn {
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .reply-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    /* Пустые сообщения */
+    .no-messages {
+        text-align: center;
+        padding: 30px;
+        color: #888;
+    }
+    
+    .no-messages-icon {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+    
+    /* Сайдбар */
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .info-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .info-label {
+        font-size: 0.85rem;
+        color: #888;
+    }
+    
+    .info-value {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #1a1a2e;
+    }
+    
+    /* Связанный заказ */
+    .related-order-card {
+        display: block;
+        padding: 15px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 12px;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.2s ease;
+    }
+    
+    .related-order-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .related-order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    
+    .related-order-title {
+        font-weight: 600;
+        color: #1a1a2e;
+    }
+    
+    .related-order-status {
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .related-order-service {
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    /* Кнопки действий */
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        font-size: 0.95rem;
+        width: 100%;
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+    }
+    
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
+    }
+    
+    .btn-outline {
+        background: white;
+        color: #667eea;
+        border: 2px solid #667eea;
+    }
+    
+    .btn-outline:hover {
+        background: #667eea;
+        color: white;
+    }
+    
+    /* Закрытый тикет */
+    .closed-notice {
+        background: #f5f5f5;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        color: #666;
+    }
+    
+    .closed-notice-icon {
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+    }
+    
+    /* Успешное сообщение */
+    .success-message {
+        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+        border-radius: 10px;
+        padding: 12px 18px;
+        color: #2e7d32;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    @media (max-width: 900px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .sidebar {
+            order: -1;
+        }
+    }
+    
+    @media (max-width: 600px) {
+        .ticket-detail-container {
+            padding: 15px;
+        }
+        
+        .ticket-header {
+            flex-direction: column;
+        }
+        
+        .message-bubble {
+            max-width: 85%;
+        }
+        
+        .card-body {
+            padding: 15px;
+        }
+        
+        .reply-form {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ticket-detail-container">
+    <a href="{% url 'shop:my_tickets' %}" class="back-link">
+        ← Вернуться к тикетам
+    </a>
+    
+    <div class="ticket-header">
+        <div class="ticket-title-section">
+            <h1>{{ ticket.subject }}</h1>
+            <div class="ticket-meta-row">
+                <span class="ticket-id">#{{ ticket.id }}</span>
+                <span class="category-badge category-{{ ticket.category }}">
+                    {% if ticket.category == 'request' %}📝 Запрос
+                    {% elif ticket.category == 'complaint' %}⚠️ Жалоба
+                    {% elif ticket.category == 'purchase' %}🛒 Покупка
+                    {% endif %}
+                </span>
+                <span class="priority-badge priority-{{ ticket.priority }}">
+                    {% if ticket.priority == 'low' %}Низкий
+                    {% elif ticket.priority == 'medium' %}Средний
+                    {% elif ticket.priority == 'high' %}Высокий
+                    {% endif %} приоритет
+                </span>
+            </div>
+        </div>
+        <span class="status-badge status-{{ ticket.status }}">
+            {% if ticket.status == 'new' %}🆕 Новый
+            {% elif ticket.status == 'in_progress' %}🔄 В работе
+            {% elif ticket.status == 'resolved' %}✅ Решён
+            {% elif ticket.status == 'rejected' %}❌ Отклонён
+            {% endif %}
+        </span>
+    </div>
+    
+    <div class="content-grid">
+        <div class="main-content">
+            <!-- Описание -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📄 Описание</h2>
+                    <span style="font-size: 0.85rem; color: #888;">
+                        {{ ticket.created_at|date:"d.m.Y H:i" }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="ticket-description">{{ ticket.description }}</div>
+                </div>
+            </div>
+            
+            <!-- Сообщения -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>💬 Переписка</h2>
+                    <span style="font-size: 0.85rem; color: #888;">
+                        {{ messages.count }} сообщений
+                    </span>
+                </div>
+                <div class="card-body">
+                    {% if success_message %}
+                    <div class="success-message">
+                        <span>✓</span> {{ success_message }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if messages %}
+                    <div class="messages-list">
+                        {% for message in messages %}
+                        <div class="message-item {% if message.is_admin_message %}admin{% endif %}">
+                            <div class="message-avatar">
+                                {% if message.is_admin_message %}👨‍💼{% else %}👤{% endif %}
+                            </div>
+                            <div class="message-bubble">
+                                <div class="message-text">{{ message.message }}</div>
+                                <div class="message-meta">
+                                    {% if message.is_admin_message %}
+                                    {{ message.author.username }} • 
+                                    {% endif %}
+                                    {{ message.created_at|date:"d.m.Y H:i" }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="no-messages">
+                        <div class="no-messages-icon">💬</div>
+                        <div>Пока нет сообщений</div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Форма ответа -->
+                    {% if ticket.status == 'new' or ticket.status == 'in_progress' %}
+                    <form method="post" class="reply-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="message">
+                        <textarea name="message" 
+                                  class="reply-input" 
+                                  placeholder="Напишите сообщение..."
+                                  rows="1"
+                                  required></textarea>
+                        <button type="submit" class="reply-btn">
+                            📤 Отправить
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="closed-notice">
+                        <div class="closed-notice-icon">🔒</div>
+                        <div>Тикет закрыт. Отправка сообщений недоступна.</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Сайдбар -->
+        <div class="sidebar">
+            <!-- Информация -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📋 Информация</h2>
+                </div>
+                <div class="card-body">
+                    <div class="info-list">
+                        <div class="info-item">
+                            <span class="info-label">Создан</span>
+                            <span class="info-value">{{ ticket.created_at|date:"d.m.Y H:i" }}</span>
+                        </div>
+                        {% if ticket.updated_at != ticket.created_at %}
+                        <div class="info-item">
+                            <span class="info-label">Обновлён</span>
+                            <span class="info-value">{{ ticket.updated_at|date:"d.m.Y H:i" }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="info-item">
+                            <span class="info-label">Исполнитель</span>
+                            <span class="info-value">
+                                {% if ticket.assigned_to %}
+                                {{ ticket.assigned_to.username }}
+                                {% else %}
+                                Не назначен
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% if ticket.resolved_at %}
+                        <div class="info-item">
+                            <span class="info-label">Решён</span>
+                            <span class="info-value">{{ ticket.resolved_at|date:"d.m.Y H:i" }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Связанный заказ -->
+            {% if ticket.service_order %}
+            <div class="card">
+                <div class="card-header">
+                    <h2>📦 Связанный заказ</h2>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'shop:order_detail' ticket.service_order.id %}" class="related-order-card">
+                        <div class="related-order-header">
+                            <span class="related-order-title">Заказ #{{ ticket.service_order.id }}</span>
+                            <span class="related-order-status status-{{ ticket.service_order.status }}">
+                                {{ ticket.service_order.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="related-order-service">
+                            {{ ticket.service_order.service.name }}
+                        </div>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Действия -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="action-buttons">
+                        {% if ticket.status == 'new' or ticket.status == 'in_progress' %}
+                        <form method="post" style="width: 100%;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="close">
+                            <button type="submit" class="btn btn-success" onclick="return confirm('Вы уверены, что хотите закрыть тикет?')">
+                                ✅ Закрыть тикет
+                            </button>
+                        </form>
+                        {% endif %}
+                        
+                        {% if ticket.status == 'resolved' or ticket.status == 'rejected' %}
+                        <a href="{% url 'shop:ticket_create' %}?category={{ ticket.category }}" class="btn btn-outline">
+                            ➕ Создать новый тикет
+                        </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'shop:my_tickets' %}" class="btn btn-outline">
+                            ← К списку тикетов
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

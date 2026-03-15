@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+
+{% block title %}Применить санкцию - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<style>
+    .sanction-container {
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+    
+    .sanction-header {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        border-left: 4px solid var(--accent);
+    }
+    
+    .sanction-header h1 {
+        margin: 0 0 0.5rem 0;
+        font-size: 2rem;
+    }
+    
+    .alert-warning {
+        background: rgba(255, 152, 0, 0.2);
+        border-left: 4px solid #FF9800;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+    
+    .form-section {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-section-title {
+        font-size: 1.3rem;
+        color: var(--accent);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--border);
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+        font-weight: 500;
+        font-size: 1rem;
+    }
+    
+    .form-group select,
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: var(--primary-bg);
+        color: var(--text-primary);
+        font-size: 1rem;
+    }
+    
+    .form-group select:focus,
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+    
+    .form-group small {
+        display: block;
+        margin-top: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+    
+    .form-group textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid var(--border);
+    }
+    
+    .btn-danger {
+        background: #f44336;
+        color: white;
+        padding: 0.8rem 2rem;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        flex: 1;
+    }
+    
+    .btn-danger:hover {
+        background: #d32f2f;
+        transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+        background: var(--card-bg);
+        color: var(--text-primary);
+        padding: 0.8rem 2rem;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        flex: 1;
+    }
+    
+    .btn-secondary:hover {
+        background: var(--primary-bg);
+    }
+    
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .button-group {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="sanction-container">
+    <div class="sanction-header">
+        <h1>⚖️ Применение санкции</h1>
+        <p style="color: var(--text-secondary); margin: 0;">
+            Турнир: <strong>{{ tournament.name }}</strong>
+        </p>
+    </div>
+    
+    <div class="alert-warning">
+        <strong>⚠️ Внимание!</strong><br>
+        Санкции серьезно влияют на ход турнира и рейтинги участников. 
+        Убедитесь в правильности применения санкции и указания причины.
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <!-- Основная информация -->
+        <div class="form-section">
+            <div class="form-section-title">Основная информация</div>
+            
+            <div class="form-group">
+                <label>Тип санкции *</label>
+                <select name="sanction_type" id="sanctionType" required>
+                    <option value="">Выберите тип санкции</option>
+                    <option value="warning">⚠️ Предупреждение</option>
+                    <option value="technical_loss">❌ Техническое поражение</option>
+                    <option value="disqualification">🚫 Дисквалификация</option>
+                    <option value="points_deduction">📉 Снятие очков</option>
+                    <option value="ban">🔒 Временный бан</option>
+                </select>
+                <small>Выберите соответствующий тип санкции за нарушение</small>
+            </div>
+            
+            <div class="form-group">
+                <label>Причина санкции *</label>
+                <textarea name="reason" 
+                          placeholder="Подробно опишите причину применения санкции, включая номер матча, время нарушения и другие важные детали..."
+                          required></textarea>
+                <small>Укажите максимально подробную информацию о нарушении</small>
+            </div>
+        </div>
+        
+        <!-- Субъект санкции -->
+        <div class="form-section">
+            <div class="form-section-title">Субъект санкции</div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Команда</label>
+                    <select name="team" id="teamSelect">
+                        <option value="">Не применяется к команде</option>
+                        {% for team in teams %}
+                            <option value="{{ team.id }}">{{ team.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <small>Выберите, если санкция применяется к команде</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Игрок (из команд турнира)</label>
+                    <select name="player" id="playerSelect">
+                        <option value="">Не применяется к игроку</option>
+                        {% for player in players %}
+                            <option value="{{ player.id }}">
+                                {{ player.username }}
+                                {% if player.current_team %}
+                                    ({{ player.current_team }})
+                                {% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <small>Выберите, если санкция применяется к конкретному игроку</small>
+                </div>
+            </div>
+            
+            <div style="background: rgba(33, 150, 243, 0.1); padding: 1rem; border-radius: 5px; border-left: 3px solid #2196F3;">
+                <small style="color: var(--text-primary);">
+                    ℹ️ <strong>Примечание:</strong> Можно выбрать либо команду, либо игрока. 
+                    В списке игроков доступны только участники команд данного турнира.
+                </small>
+            </div>
+        </div>
+        
+        <!-- Дополнительные параметры -->
+        <div class="form-section" id="additionalParams" style="display: none;">
+            <div class="form-section-title">Дополнительные параметры</div>
+            
+            <div class="form-group" id="pointsField" style="display: none;">
+                <label>Количество снимаемых очков</label>
+                <input type="number" name="points_deducted" min="1" max="100" value="3">
+                <small>Укажите количество очков для снятия (обычно 3-6 очков)</small>
+            </div>
+            
+            <div class="form-group" id="banField" style="display: none;">
+                <label>Длительность бана (дней)</label>
+                <input type="number" name="ban_duration_days" min="1" max="365" value="7">
+                <small>Укажите длительность бана в днях (обычно 7-30 дней)</small>
+            </div>
+        </div>
+        
+        <!-- Кнопки -->
+        <div class="button-group">
+            <a href="{% url 'admin_panel:sanctions_list' tournament.id %}" class="btn-secondary">
+                ← Отмена
+            </a>
+            <button type="submit" class="btn-danger">
+                ⚖️ Применить санкцию
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Показываем дополнительные поля в зависимости от типа санкции
+document.getElementById('sanctionType').addEventListener('change', function() {
+    const pointsField = document.getElementById('pointsField');
+    const banField = document.getElementById('banField');
+    const additionalParams = document.getElementById('additionalParams');
+    
+    pointsField.style.display = 'none';
+    banField.style.display = 'none';
+    additionalParams.style.display = 'none';
+    
+    if (this.value === 'points_deduction') {
+        additionalParams.style.display = 'block';
+        pointsField.style.display = 'block';
+    } else if (this.value === 'ban') {
+        additionalParams.style.display = 'block';
+        banField.style.display = 'block';
+    }
+});
+
+// Взаимоисключающий выбор команды и игрока
+document.getElementById('teamSelect').addEventListener('change', function() {
+    if (this.value) {
+        document.getElementById('playerSelect').value = '';
+    }
+});
+
+document.getElementById('playerSelect').addEventListener('change', function() {
+    if (this.value) {
+        document.getElementById('teamSelect').value = '';
+    }
+});
+
+// Валидация при отправке формы
+document.querySelector('form').addEventListener('submit', function(e) {
+    const teamSelect = document.getElementById('teamSelect');
+    const playerSelect = document.getElementById('playerSelect');
+    
+    if (!teamSelect.value && !playerSelect.value) {
+        e.preventDefault();
+        alert('⚠️ Необходимо выбрать либо команду, либо игрока для применения санкции!');
+        return false;
+    }
+});
+</script>
+{% endblock %}

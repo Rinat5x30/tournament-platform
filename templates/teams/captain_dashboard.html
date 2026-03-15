@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Панель капитана - {{ team.name }}{% endblock %}
+
+{% block content %}
+<style>
+    .container {
+        display: block !important;
+        max-width: 1400px !important;
+    }
+    
+    .sidebar {
+        display: none !important;
+    }
+</style>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 1.5rem;">
+            {% if team.logo %}
+                <img src="{{ team.logo.url }}" alt="{{ team.name }}" 
+                     style="width: 80px; height: 80px; border-radius: 10px; object-fit: cover;">
+            {% else %}
+                <div style="width: 80px; height: 80px; border-radius: 10px; background: var(--secondary-bg); display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+                    🛡️
+                </div>
+            {% endif %}
+            <div>
+                <h1 style="margin-bottom: 0.3rem;">🛡️ Панель капитана</h1>
+                <h2 style="color: var(--text-secondary); font-size: 1.3rem; font-weight: 400; margin: 0;">
+                    {{ team.name }}
+                </h2>
+                <p style="color: var(--text-secondary); margin: 0.3rem 0 0 0;">
+                    👥 Состав: {{ members|length }} игроков
+                </p>
+            </div>
+        </div>
+        <a href="{% url 'teams:team_detail' team.slug %}" class="btn btn-secondary" target="_blank">
+            👁️ Просмотр страницы
+        </a>
+    </div>
+</div>
+
+<!-- Статистика -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+    <div class="card" style="text-align: center;">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📋</div>
+        <div class="stat-value">{{ matches_to_confirm|length }}</div>
+        <div class="stat-label">Матчей на подтверждение</div>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏆</div>
+        <div class="stat-value">{{ active_tournaments|length }}</div>
+        <div class="stat-label">Активных турниров</div>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚽</div>
+        <div class="stat-value">{{ upcoming_matches|length }}</div>
+        <div class="stat-label">Предстоящих матчей</div>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">👥</div>
+        <div class="stat-value">{{ members|length }}</div>
+        <div class="stat-label">Игроков в составе</div>
+    </div>
+</div>
+
+<!-- Матчи на подтверждение результата -->
+{% if matches_to_confirm %}
+<div class="card" style="border-left: 4px solid #ff9800;">
+    <h2 class="card-title" style="color: #ff9800;">
+        ⚠️ Требуется подтверждение результатов ({{ matches_to_confirm|length }})
+    </h2>
+    
+    {% for match in matches_to_confirm %}
+    <div class="match-card">
+        <div style="flex: 1;">
+            <div class="match-team">
+                {% if match.team1.logo %}
+                    <img src="{{ match.team1.logo.url }}" class="team-logo" alt="{{ match.team1.name }}">
+                {% endif %}
+                <span>{{ match.team1.name }}</span>
+            </div>
+            <div style="text-align: center; margin: 1rem 0;">
+                <div class="match-score">{{ match.score_team1 }} : {{ match.score_team2 }}</div>
+                <div class="match-time">
+                    {{ match.tournament.name }}<br>
+                    {{ match.scheduled_time|date:"d.m.Y H:i" }}
+                </div>
+            </div>
+            <div class="match-team away">
+                {% if match.team2.logo %}
+                    <img src="{{ match.team2.logo.url }}" class="team-logo" alt="{{ match.team2.name }}">
+                {% endif %}
+                <span>{{ match.team2.name }}</span>
+            </div>
+        </div>
+        <a href="{% url 'teams:confirm_match_result' match.id %}" 
+           class="btn btn-primary"
+           style="background: #ff9800;">
+            ✓ Подтвердить результат
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Турниры на подтверждение участия -->
+{% if pending_tournaments %}
+<div class="card" style="border-left: 4px solid #2196F3;">
+    <h2 class="card-title" style="color: #2196F3;">
+        🏆 Подтвердите участие в турнирах ({{ pending_tournaments|length }})
+    </h2>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+        {% for participant in pending_tournaments %}
+        <div style="background: var(--card-bg); padding: 1.5rem; border-radius: 8px; display: flex; flex-direction: column; gap: 1rem;">
+            <div>
+                <h3 style="margin-bottom: 0.5rem;">{{ participant.tournament.name }}</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                    📅 Начало: {{ participant.tournament.start_date|date:"d.m.Y" }}<br>
+                    {% if participant.tournament.registration_end %}
+                        ⏰ Регистрация до: {{ participant.tournament.registration_end|date:"d.m.Y" }}
+                    {% endif %}
+                </p>
+            </div>
+            <a href="{% url 'teams:confirm_tournament_participation' participant.tournament.id %}" 
+               class="btn btn-primary"
+               style="background: #2196F3;">
+                ✓ Подтвердить участие
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Активные санкции -->
+{% if active_sanctions %}
+<div class="card" style="border-left: 4px solid #f44336;">
+    <h2 class="card-title" style="color: #f44336;">
+        🚫 Активные санкции ({{ active_sanctions|length }})
+    </h2>
+    
+    {% for sanction in active_sanctions %}
+    <div style="background: var(--card-bg); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #f44336;">
+        <div style="display: flex; justify-content: between; align-items: start; gap: 1rem;">
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <span style="background: #f44336; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; font-weight: 600;">
+                        {{ sanction.get_sanction_type_display }}
+                    </span>
+                    {% if sanction.expires_at %}
+                        <span style="color: var(--text-secondary); font-size: 0.85rem;">
+                            До {{ sanction.expires_at|date:"d.m.Y" }}
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <p style="font-weight: 600; margin-bottom: 0.3rem;">
+                    {% if sanction.player %}
+                        Игрок: {{ sanction.player.username }}
+                    {% elif sanction.team %}
+                        Команда: {{ sanction.team.name }}
+                    {% endif %}
+                </p>
+                
+                <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">
+                    <strong>Причина:</strong> {{ sanction.reason }}
+                </p>
+                
+                {% if sanction.points_deducted > 0 %}
+                    <p style="color: #f44336; font-weight: 600; margin-bottom: 0.3rem;">
+                        📉 Снято очков: {{ sanction.points_deducted }}
+                    </p>
+                {% endif %}
+                
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">
+                    Выдана: {{ sanction.issued_at|date:"d.m.Y" }} | {{ sanction.tournament.name }}
+                </p>
+            </div>
+            
+            <a href="{% url 'teams:submit_appeal' sanction.id %}" 
+               class="btn btn-secondary"
+               style="white-space: nowrap;">
+                📝 Подать апелляцию
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+    <!-- Открытые турниры -->
+    <div class="card">
+        <h2 class="card-title">🏆 Открытые турниры</h2>
+        
+        {% if open_tournaments %}
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                {% for tournament in open_tournaments %}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--card-bg); border-radius: 8px;">
+                    <div>
+                        <h4 style="margin-bottom: 0.3rem;">{{ tournament.name }}</h4>
+                        <small style="color: var(--text-secondary);">
+                            ⏰ До {{ tournament.registration_end|date:"d.m.Y" }}
+                        </small>
+                    </div>
+                    <a href="{% url 'teams:register_for_tournament' tournament.id %}" 
+                       class="btn btn-primary">
+                        Регистрация
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
+                Нет доступных турниров
+            </p>
+        {% endif %}
+    </div>
+    
+    <!-- Активные турниры -->
+    <div class="card">
+        <h2 class="card-title">✅ Активные турниры</h2>
+        
+        {% if active_tournaments %}
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                {% for participant in active_tournaments %}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--card-bg); border-radius: 8px;">
+                    <div>
+                        <h4 style="margin-bottom: 0.3rem;">{{ participant.tournament.name }}</h4>
+                        <small style="color: var(--text-secondary);">
+                            {{ participant.tournament.get_status_display }}
+                        </small>
+                    </div>
+                    <a href="{% url 'tournaments:tournament_detail' participant.tournament.slug %}" 
+                       class="btn btn-secondary">
+                        Подробнее
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
+                Нет активных турниров
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Предстоящие матчи -->
+{% if upcoming_matches %}
+<div class="card">
+    <h2 class="card-title">📅 Предстоящие матчи</h2>
+    
+    {% for match in upcoming_matches %}
+    <div class="match-card">
+        <div class="match-team">
+            {% if match.team1.logo %}
+                <img src="{{ match.team1.logo.url }}" class="team-logo" alt="{{ match.team1.name }}">
+            {% endif %}
+            <span>{{ match.team1.name }}</span>
+        </div>
+        <div>
+            <div class="match-score" style="font-size: 1.3rem; font-weight: 400; color: var(--text-secondary);">
+                VS
+            </div>
+            <div class="match-time">
+                {{ match.tournament.name }}<br>
+                {{ match.scheduled_time|date:"d.m.Y H:i" }}
+            </div>
+        </div>
+        <div class="match-team away">
+            {% if match.team2.logo %}
+                <img src="{{ match.team2.logo.url }}" class="team-logo" alt="{{ match.team2.name }}">
+            {% endif %}
+            <span>{{ match.team2.name }}</span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Состав команды (только просмотр) -->
+<div class="card">
+    <h2 class="card-title">👥 Состав команды</h2>
+    
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Игрок</th>
+                    <th>Роль</th>
+                    <th>Номер</th>
+                    <th>В команде с</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in members %}
+                    {% if member.is_active %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'accounts:profile' member.player.username %}" 
+                               style="color: var(--accent); text-decoration: none; font-weight: 600;">
+                                {{ member.player.username }}
+                            </a>
+                        </td>
+                        <td>
+                            <span style="background: var(--card-bg); padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">
+                                {{ member.get_role_display }}
+                            </span>
+                        </td>
+                        <td style="text-align: center; font-weight: bold; font-size: 1.1rem;">
+                            {% if member.jersey_number %}
+                                #{{ member.jersey_number }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>{{ member.joined_date|date:"d.m.Y" }}</td>
+                        <td>
+                            <span style="background: #4CAF50; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">
+                                ✓ Активен
+                            </span>
+                        </td>
+                    </tr>
+                    {% endif %}
+                {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                            В команде пока нет игроков
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Информационная карточка -->
+<div class="card" style="background: var(--card-bg); border-left: 4px solid #2196F3;">
+    <h3 style="margin-bottom: 0.5rem;">💡 Информация</h3>
+    <p style="color: var(--text-secondary); line-height: 1.6; margin: 0;">
+        Для добавления или удаления игроков из команды обратитесь к администратору. 
+        Управление составом доступно только администраторам платформы.
+    </p>
+</div>
+{% endblock %}
+
+{% block left_sidebar %}{% endblock %}
+{% block right_sidebar %}{% endblock %}

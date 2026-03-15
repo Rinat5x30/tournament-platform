@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if season %}Редактировать{% else %}Создать{% endif %} сезон | Админ-панель{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>{% if season %}✏️ Редактировать сезон{% else %}➕ Создать новый сезон{% endif %}</h1>
+</div>
+
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="name">Название сезона *</label>
+            <input 
+                type="text" 
+                id="name" 
+                name="name" 
+                value="{% if season %}{{ season.name }}{% endif %}"
+                placeholder="Например: Сезон 2024/2025"
+                required
+            >
+            <small style="color: var(--text-secondary); display: block; margin-top: 0.3rem;">
+                Рекомендуется использовать формат "Сезон YYYY/YYYY" или "Сезон N"
+            </small>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="start_date">Дата начала *</label>
+                <input 
+                    type="date" 
+                    id="start_date" 
+                    name="start_date" 
+                    value="{% if season %}{{ season.start_date|date:'Y-m-d' }}{% endif %}"
+                    required
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="end_date">Дата окончания</label>
+                <input 
+                    type="date" 
+                    id="end_date" 
+                    name="end_date" 
+                    value="{% if season and season.end_date %}{{ season.end_date|date:'Y-m-d' }}{% endif %}"
+                >
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.3rem;">
+                    Оставьте пустым для бессрочного сезона
+                </small>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label style="display: flex; align-items: center; cursor: pointer;">
+                <input 
+                    type="checkbox" 
+                    name="is_active" 
+                    {% if season and season.is_active %}checked{% elif not season %}checked{% endif %}
+                    style="width: auto; margin-right: 0.5rem;"
+                >
+                <span>Активный сезон</span>
+            </label>
+            <small style="color: var(--text-secondary); display: block; margin-top: 0.3rem;">
+                ⚠️ Только один сезон может быть активным одновременно. При активации этого сезона, все остальные будут деактивированы.
+            </small>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">
+                {% if season %}💾 Сохранить изменения{% else %}➕ Создать сезон{% endif %}
+            </button>
+            <a href="{% url 'admin_panel:season_list' %}" class="btn btn-secondary">
+                Отмена
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Информационная карточка -->
+<div class="card" style="background: var(--card-bg); border-left: 4px solid #2196F3;">
+    <h3 style="margin-bottom: 1rem;">ℹ️ Как работают сезоны</h3>
+    <ul style="color: var(--text-secondary); line-height: 1.8; padding-left: 1.5rem;">
+        <li>Сезоны помогают организовать турниры по временным периодам</li>
+        <li>Каждый турнир может быть привязан к сезону</li>
+        <li>Активный сезон отображается на главной странице</li>
+        <li>Рейтинги и статистика могут считаться отдельно для каждого сезона</li>
+        <li>После окончания сезона его данные сохраняются в архиве</li>
+    </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ service.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .shop-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 24px 40px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .shop-header .breadcrumb { font-size: 14px; opacity: 0.9; }
+    .shop-header .breadcrumb a { color: white; text-decoration: none; }
+    
+    .content-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
+    
+    .card {
+        background: var(--secondary-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+    
+    .service-badges { display: flex; gap: 8px; margin-bottom: 16px; }
+    
+    .badge { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; }
+    .badge-auto { background: rgba(76,175,80,0.2); color: #4CAF50; }
+    .badge-manual { background: rgba(255,152,0,0.2); color: #ff9800; }
+    .badge-category { background: rgba(33,150,243,0.15); color: #1565c0; }
+    
+    .service-title { color: var(--text-primary); font-size: 1.6rem; margin: 0 0 16px; }
+    .service-desc { color: var(--text-secondary); font-size: 15px; line-height: 1.7; margin-bottom: 24px; }
+    
+    .info-box { background: var(--card-bg); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+    .info-box-title { font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+    .info-box p { color: var(--text-secondary); margin: 0; font-size: 14px; }
+    
+    .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .info-row:last-child { border-bottom: none; }
+    .info-row .label { color: var(--text-secondary); }
+    .info-row .value { color: var(--text-primary); font-weight: 500; }
+    
+    .action-card {
+        background: var(--secondary-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 24px;
+        position: sticky;
+        top: 100px;
+    }
+    
+    .action-title { color: var(--text-primary); font-size: 1.1rem; margin: 0 0 16px; }
+    
+    .availability-box { padding: 14px; border-radius: 10px; text-align: center; margin-bottom: 16px; font-weight: 500; }
+    .availability-yes { background: rgba(76,175,80,0.15); color: #2e7d32; }
+    .availability-no { background: rgba(244,67,54,0.15); color: #c62828; }
+    
+    .action-btn {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .action-btn:hover { transform: translateY(-2px); }
+    .action-btn.disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
+    
+    .how-it-works { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+    .how-it-works-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; }
+    .step { display: flex; gap: 12px; margin-bottom: 10px; }
+    .step-number { width: 24px; height: 24px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+    .step-text { color: var(--text-secondary); font-size: 13px; }
+    
+    .history-title { color: var(--text-primary); font-size: 1rem; margin-bottom: 12px; }
+    .history-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .history-item:last-child { border-bottom: none; }
+    .history-date { color: var(--text-secondary); }
+    .status { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+    .status-completed { background: rgba(76,175,80,0.15); color: #2e7d32; }
+    .status-pending { background: rgba(255,152,0,0.15); color: #e65100; }
+    .status-rejected { background: rgba(244,67,54,0.15); color: #c62828; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="shop-header">
+    <div class="breadcrumb"><a href="{% url 'shop:index' %}">Магазин</a> / <a href="{% url 'shop:service_list' %}">Услуги</a> / {{ service.name }}</div>
+</div>
+
+<div class="content-grid">
+    <main>
+        <div class="card">
+            <div class="service-badges">
+                {% if service.processing_type == 'auto' %}<span class="badge badge-auto">⚡ Автоматическая</span>{% else %}<span class="badge badge-manual">👤 Ручная</span>{% endif %}
+                <span class="badge badge-category">{{ service.category.name }}</span>
+            </div>
+            
+            <h1 class="service-title">{{ service.name }}</h1>
+            <p class="service-desc">{{ service.description }}</p>
+            
+            <div class="info-box">
+                <div class="info-box-title">{% if service.processing_type == 'auto' %}⚡ Автоматическая{% else %}👤 Ручная{% endif %} обработка</div>
+                <p>{% if service.processing_type == 'auto' %}Выполняется мгновенно{% else %}Обработка 1-24 часа{% endif %}</p>
+            </div>
+            
+            {% if service.max_uses_per_user or service.cooldown_days %}
+            <div class="info-box">
+                <div class="info-box-title">📊 Ограничения</div>
+                {% if service.max_uses_per_user %}<div class="info-row"><span class="label">Лимит</span><span class="value">{{ service.max_uses_per_user }} раз</span></div>{% endif %}
+                {% if service.cooldown_days %}<div class="info-row"><span class="label">Ожидание</span><span class="value">{{ service.cooldown_days }} дней</span></div>{% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        {% if user_orders %}
+        <div class="card">
+            <h3 class="history-title">📜 История</h3>
+            {% for order in user_orders %}
+            <div class="history-item">
+                <span class="history-date">{{ order.created_at|date:"d.m.Y H:i" }}</span>
+                <span class="status status-{{ order.status }}">{{ order.get_status_display }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </main>
+    
+    <aside>
+        <div class="action-card">
+            <h3 class="action-title">Запросить услугу</h3>
+            <div class="availability-box {% if can_use %}availability-yes{% else %}availability-no{% endif %}">
+                {% if can_use %}✅ Доступна{% else %}❌ {{ use_message }}{% endif %}
+            </div>
+            {% if can_use %}<a href="{% url 'shop:service_request' service.id %}" class="action-btn">Запросить</a>{% else %}<button class="action-btn disabled" disabled>Недоступно</button>{% endif %}
+            
+            <div class="how-it-works">
+                <div class="how-it-works-title">Как это работает?</div>
+                <div class="step"><div class="step-number">1</div><div class="step-text">Нажмите "Запросить"</div></div>
+                <div class="step"><div class="step-number">2</div><div class="step-text">Заполните форму</div></div>
+                <div class="step"><div class="step-number">3</div><div class="step-text">{% if service.processing_type == 'auto' %}Мгновенный результат{% else %}Ожидайте обработки{% endif %}</div></div>
+            </div>
+        </div>
+    </aside>
+</div>
+{% endblock %}

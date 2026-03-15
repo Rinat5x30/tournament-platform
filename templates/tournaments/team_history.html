@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}История {{ team.name }} | Tournament Platform{% endblock %}
+
+{% block content %}
+<style>
+    .team-header {
+        background: linear-gradient(135deg, var(--card-bg) 0%, var(--secondary-bg) 100%);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+    }
+    
+    .season-history-card {
+        background: var(--secondary-bg);
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid var(--accent);
+    }
+</style>
+
+<div class="team-header">
+    {% if team.logo %}
+        <img src="{{ team.logo.url }}" alt="{{ team.name }}" style="width: 100px; height: 100px; border-radius: 10px;">
+    {% else %}
+        <div style="width: 100px; height: 100px; border-radius: 10px; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 3rem;">
+            ⚽
+        </div>
+    {% endif %}
+    <div>
+        <h1>История команды</h1>
+        <h2 style="color: var(--accent);">{{ team.name }}</h2>
+        <p style="color: var(--text-secondary);">Результаты по сезонам</p>
+    </div>
+</div>
+
+{% if history_by_season %}
+    {% for season_data in history_by_season %}
+        <div class="season-history-card">
+            <h2 style="margin-bottom: 1rem;">🏆 {{ season_data.season.name }}</h2>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Статистика матчей</h4>
+                    <div class="career-stats">
+                        <div class="stat-box">
+                            <div class="stat-value">{{ season_data.matches }}</div>
+                            <div class="stat-label">Матчей</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" style="color: #4CAF50;">{{ season_data.wins }}</div>
+                            <div class="stat-label">Побед</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" style="color: #FFC107;">{{ season_data.draws }}</div>
+                            <div class="stat-label">Ничьих</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" style="color: #f44336;">{{ season_data.losses }}</div>
+                            <div class="stat-label">Поражений</div>
+                        </div>
+                    </div>
+                    
+                    {% if season_data.rating %}
+                        <div style="margin-top: 1rem;">
+                            <h4>Рейтинг: <span style="color: var(--accent);">{{ season_data.rating.rating|floatformat:0 }}</span></h4>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-6">
+                    {% if season_data.roster %}
+                        <h4>Состав сезона</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+                            {% for member in season_data.roster %}
+                                <span class="badge bg-secondary" style="padding: 0.5rem 1rem;">
+                                    {{ member.player.username }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if season_data.awards %}
+                <div style="margin-top: 1.5rem;">
+                    <h4>🏅 Достижения:</h4>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                        {% for award in season_data.awards %}
+                            <span class="badge" style="background: gold; color: black; padding: 0.5rem 1rem; font-size: 1rem;">
+                                {{ award.get_award_type_display }} - {{ award.tournament.name }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="card text-center py-5">
+        <p style="color: var(--text-secondary); font-size: 1.2rem;">
+            История команды по сезонам пока отсутствует
+        </p>
+    </div>
+{% endif %}
+
+<div class="mt-3">
+    <a href="{% url 'teams:team_detail' team.slug %}" class="btn btn-secondary">
+        ← Вернуться к команде
+    </a>
+</div>
+{% endblock %}

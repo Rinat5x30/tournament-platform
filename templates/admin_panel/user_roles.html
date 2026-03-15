@@ -1,0 +1,131 @@
+<!-- templates/admin_panel/user_roles.html -->
+{% extends 'base.html' %}
+
+{% block title %}Управление ролями | Админ-панель{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>👥 Управление ролями пользователей</h1>
+    <p style="color: var(--text-secondary);">
+        Назначайте роли пользователям для управления доступом к функциям платформы
+    </p>
+</div>
+
+<!-- Фильтры -->
+<div class="card">
+    <form method="get" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end;">
+        <div style="flex: 1; min-width: 200px;">
+            <label>Поиск</label>
+            <input type="text" name="search" value="{{ search }}" placeholder="Имя пользователя, Discord..." class="form-control">
+        </div>
+        
+        <div style="min-width: 200px;">
+            <label>Роль</label>
+            <select name="role" class="form-control">
+                <option value="">Все роли</option>
+                <option value="player" {% if selected_role == 'player' %}selected{% endif %}>Игрок</option>
+                <option value="captain" {% if selected_role == 'captain' %}selected{% endif %}>Капитан</option>
+                <!-- <option value="moderator" {% if selected_role == 'moderator' %}selected{% endif %}>Модератор</option> -->
+                <option value="admin" {% if selected_role == 'admin' %}selected{% endif %}>Администратор</option>
+            </select>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">🔍 Найти</button>
+        {% if search or selected_role %}
+        <a href="{% url 'admin_panel:user_roles' %}" class="btn btn-secondary">✖ Сбросить</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Список пользователей -->
+<div class="card">
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Пользователь</th>
+                    <th>Discord</th>
+                    <th>Текущая роль</th>
+                    <th>Дата регистрации</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user_item in users %}
+                <tr>
+                    <td>
+                        <a href="{% url 'accounts:profile' user_item.username %}" style="color: var(--accent); text-decoration: none;">
+                            {{ user_item.username }}
+                        </a>
+                    </td>
+                    <td style="color: var(--text-secondary);">
+                        {{ user_item.discord_username|default:"—" }}
+                    </td>
+                    <td>
+                        <span style="background: 
+                            {% if user_item.role == 'admin' %}#f44336
+                            {% elif user_item.role == 'moderator' %}#ff9800
+                            {% elif user_item.role == 'captain' %}#2196F3
+                            {% else %}#4CAF50{% endif %};
+                            color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">
+                            {{ user_item.get_role_display }}
+                        </span>
+                    </td>
+                    <td>{{ user_item.date_joined|date:"d.m.Y" }}</td>
+                    <td>
+                        <a href="{% url 'admin_panel:user_role_change' user_item.id %}" class="btn btn-secondary" style="padding: 0.3rem 0.8rem;">
+                            ✏️ Изменить роль
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                        Пользователи не найдены
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Информация о ролях -->
+<div class="card" style="background: var(--card-bg); border-left: 4px solid #2196F3;">
+    <h3>ℹ️ О ролях</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+        <div>
+            <h4 style="color: #4CAF50;">👤 Игрок</h4>
+            <ul style="color: var(--text-secondary); font-size: 0.9rem;">
+                <li>Просмотр турниров</li>
+                <li>Участие в командах</li>
+                <li>Просмотр статистики</li>
+            </ul>
+        </div>
+        <div>
+            <h4 style="color: #2196F3;">⭐ Капитан</h4>
+            <ul style="color: var(--text-secondary); font-size: 0.9rem;">
+                <li>Всё, что может игрок</li>
+                <li>Управление составом команды</li>
+                <li>Подача заявок на турниры</li>
+            </ul>
+        </div>
+        <!-- <div>
+            <h4 style="color: #ff9800;">🛡️ Модератор</h4>
+            <ul style="color: var(--text-secondary); font-size: 0.9rem;">
+                <li>Всё, что может капитан</li>
+                <li>Модерация матчей</li>
+                <li>Рассмотрение апелляций</li>
+            </ul>
+        </div> -->
+        <div>
+            <h4 style="color: #f44336;">👑 Администратор</h4>
+            <ul style="color: var(--text-secondary); font-size: 0.9rem;">
+                <li>Полный доступ</li>
+                <li>Создание турниров</li>
+                <li>Управление пользователями</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Санкции - {{ tournament.name }} | Админ-панель{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1>⚠️ Санкции турнира</h1>
+            <p style="color: var(--text-secondary);">{{ tournament.name }}</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="{% url 'admin_panel:sanction_create' tournament.id %}" class="btn btn-primary">
+                ➕ Добавить санкцию
+            </a>
+            <a href="{% url 'admin_panel:tournament_detail' tournament.id %}" class="btn btn-secondary">
+                ← Назад
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Дата</th>
+                    <th>Кому</th>
+                    <th>Тип</th>
+                    <th>Причина</th>
+                    <th>Снято очков</th>
+                    <th>Статус</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sanction in sanctions %}
+                <tr>
+                    <td>{{ sanction.issued_at|date:"d.m.Y H:i" }}</td>
+                    <td>
+                        {% if sanction.team %}
+                            <strong>Команда:</strong> {{ sanction.team.name }}
+                        {% elif sanction.player %}
+                            <strong>Игрок:</strong> {{ sanction.player.username }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="background: var(--card-bg); padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem;">
+                            {{ sanction.get_sanction_type_display }}
+                        </span>
+                    </td>
+                    <td style="max-width: 300px;">{{ sanction.reason|truncatewords:10 }}</td>
+                    <td style="text-align: center; font-weight: bold; color: #f44336;">
+                        {% if sanction.points_deducted > 0 %}
+                            -{{ sanction.points_deducted }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if sanction.status == 'active' %}
+                            <span style="color: #f44336;">🔴 Активна</span>
+                        {% elif sanction.status == 'expired' %}
+                            <span style="color: #757575;">⚫ Истекла</span>
+                        {% elif sanction.status == 'appealed' %}
+                            <span style="color: #ff9800;">🟡 Обжалуется</span>
+                        {% elif sanction.status == 'cancelled' %}
+                            <span style="color: #4CAF50;">✅ Отменена</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="{% url 'admin_panel:sanction_detail' sanction.id %}" 
+                               class="btn btn-secondary" style="padding: 0.3rem 0.6rem;">
+                                👁️ Просмотр
+                            </a>
+                            <form method="post" action="{% url 'admin_panel:sanction_delete' sanction.id %}" 
+                                  onsubmit="return confirm('Вы уверены, что хотите удалить эту санкцию?');"
+                                  style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger" style="padding: 0.3rem 0.6rem;">
+                                    🗑️ Удалить
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                        Санкций пока нет
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card" style="background: var(--card-bg); border-left: 4px solid #ff9800;">
+    <h3>ℹ️ О санкциях</h3>
+    <p style="color: var(--text-secondary); line-height: 1.6;">
+        Санкции применяются к командам или игрокам за нарушение правил турнира.
+    </p>
+    <ul style="color: var(--text-secondary); line-height: 1.8;">
+        <li><strong>Предупреждение</strong> — устное замечание без последствий</li>
+        <li><strong>Техническое поражение</strong> — команде засчитывается поражение 0:3</li>
+        <li><strong>Дисквалификация</strong> — исключение из турнира</li>
+        <li><strong>Снятие очков</strong> — вычитание очков из турнирной таблицы</li>
+        <li><strong>Бан</strong> — временный или постоянный запрет на участие</li>
+    </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,131 @@
+<!-- templates/admin_panel/sanction_detail.html -->
+{% extends 'base.html' %}
+
+{% block title %}Санкция #{{ sanction.id }} | Админ-панель{% endblock %}
+
+{% block content %}
+<style>
+    .detail-container {
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+    
+    .detail-section {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .detail-row {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+    
+    .detail-value {
+        color: var(--text-primary);
+    }
+</style>
+
+<div class="detail-container">
+    <div class="detail-section">
+        <h1>⚖️ Санкция #{{ sanction.id }}</h1>
+        <p style="color: var(--text-secondary);">{{ sanction.tournament.name }}</p>
+    </div>
+    
+    <div class="detail-section">
+        <h2 style="margin-bottom: 1.5rem; color: var(--accent);">Информация о санкции</h2>
+        
+        <div class="detail-row">
+            <div class="detail-label">Тип санкции:</div>
+            <div class="detail-value"><strong>{{ sanction.get_sanction_type_display }}</strong></div>
+        </div>
+        
+        <div class="detail-row">
+            <div class="detail-label">Применена к:</div>
+            <div class="detail-value">
+                {% if sanction.team %}
+                    <strong>Команда:</strong> {{ sanction.team.name }}
+                {% elif sanction.player %}
+                    <strong>Игрок:</strong> {{ sanction.player.username }}
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="detail-row">
+            <div class="detail-label">Дата применения:</div>
+            <div class="detail-value">{{ sanction.issued_at|date:"d.m.Y H:i" }}</div>
+        </div>
+        
+        <div class="detail-row">
+            <div class="detail-label">Применена:</div>
+            <div class="detail-value">{{ sanction.issued_by.username }}</div>
+        </div>
+        
+        {% if sanction.points_deducted > 0 %}
+        <div class="detail-row">
+            <div class="detail-label">Снято очков:</div>
+            <div class="detail-value" style="color: #f44336; font-weight: bold;">-{{ sanction.points_deducted }}</div>
+        </div>
+        {% endif %}
+        
+        {% if sanction.ban_duration_days %}
+        <div class="detail-row">
+            <div class="detail-label">Длительность бана:</div>
+            <div class="detail-value">{{ sanction.ban_duration_days }} дней</div>
+        </div>
+        {% endif %}
+        
+        {% if sanction.expires_at %}
+        <div class="detail-row">
+            <div class="detail-label">Истекает:</div>
+            <div class="detail-value">{{ sanction.expires_at|date:"d.m.Y H:i" }}</div>
+        </div>
+        {% endif %}
+        
+        <div class="detail-row">
+            <div class="detail-label">Статус:</div>
+            <div class="detail-value">
+                {% if sanction.status == 'active' %}
+                    <span style="color: #f44336;">🔴 Активна</span>
+                {% elif sanction.status == 'expired' %}
+                    <span style="color: #757575;">⚫ Истекла</span>
+                {% elif sanction.status == 'appealed' %}
+                    <span style="color: #ff9800;">🟡 Обжалуется</span>
+                {% elif sanction.status == 'cancelled' %}
+                    <span style="color: #4CAF50;">✅ Отменена</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="detail-row">
+            <div class="detail-label">Причина:</div>
+            <div class="detail-value" style="white-space: pre-wrap;">{{ sanction.reason }}</div>
+        </div>
+    </div>
+    
+    <div style="display: flex; gap: 1rem;">
+        <a href="{% url 'admin_panel:sanctions_list' sanction.tournament.id %}" class="btn btn-secondary" style="flex: 1;">
+            ← Назад к списку
+        </a>
+        <form method="post" action="{% url 'admin_panel:sanction_delete' sanction.id %}" 
+              onsubmit="return confirm('Вы уверены, что хотите удалить эту санкцию?')" style="flex: 1;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger" style="width: 100%;">
+                🗑️ Удалить санкцию
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}с

@@ -1,0 +1,111 @@
+<!-- templates/admin_panel/awards_manage.html -->
+{% extends 'base.html' %}
+
+{% block title %}Награды - {{ tournament.name }} | Админ-панель{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1>🏆 Награды турнира</h1>
+            <p style="color: var(--text-secondary);">{{ tournament.name }}</p>
+        </div>
+        <a href="{% url 'admin_panel:tournament_detail' tournament.id %}" class="btn btn-secondary">
+            ← Назад
+        </a>
+    </div>
+</div>
+
+<!-- Форма добавления награды -->
+<div class="card">
+    <h2 class="card-title">➕ Добавить награду</h2>
+    <form method="post">
+        {% csrf_token %}
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label>Тип награды *</label>
+                <select name="award_type" class="form-control" required>
+                    <option value="champion">🥇 Чемпион</option>
+                    <option value="runner_up">🥈 Серебряный призер</option>
+                    <option value="third_place">🥉 Бронзовый призер</option>
+                    <option value="mvp">⭐ MVP турнира</option>
+                    <option value="top_scorer">⚽ Лучший бомбардир</option>
+                    <option value="best_goalkeeper">🧤 Лучший вратарь</option>
+                    <option value="fair_play">🤝 Fair Play</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Значение (голы, очки и т.д.)</label>
+                <input type="number" name="value" class="form-control" placeholder="Например: 15 голов">
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label>Команда</label>
+                <select name="team" class="form-control">
+                    <option value="">— Не выбрано —</option>
+                    {% for team in teams %}
+                        <option value="{{ team.id }}">{{ team.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Игрок</label>
+                <select name="player" class="form-control">
+                    <option value="">— Не выбрано —</option>
+                    {% for player in players %}
+                        <option value="{{ player.id }}">{{ player.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Описание</label>
+            <textarea name="description" class="form-control" rows="2"></textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">🏆 Добавить награду</button>
+    </form>
+</div>
+
+<!-- Список наград -->
+<div class="card">
+    <h2 class="card-title">Список наград</h2>
+    {% if awards %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+            {% for award in awards %}
+            <div style="background: var(--card-bg); padding: 1.5rem; border-radius: 8px; text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;">
+                    {% if award.award_type == 'champion' %}🥇
+                    {% elif award.award_type == 'runner_up' %}🥈
+                    {% elif award.award_type == 'third_place' %}🥉
+                    {% elif award.award_type == 'mvp' %}⭐
+                    {% elif award.award_type == 'top_scorer' %}⚽
+                    {% elif award.award_type == 'best_goalkeeper' %}🧤
+                    {% else %}🏆{% endif %}
+                </div>
+                <h3 style="margin-bottom: 0.5rem;">{{ award.get_award_type_display }}</h3>
+                <p style="font-weight: 600; margin-bottom: 0.3rem;">
+                    {% if award.team %}{{ award.team.name }}{% elif award.player %}{{ award.player.username }}{% endif %}
+                </p>
+                {% if award.value %}
+                    <p style="color: var(--text-secondary);">Значение: {{ award.value }}</p>
+                {% endif %}
+                {% if award.description %}
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">{{ award.description }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+            Награды пока не добавлены
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

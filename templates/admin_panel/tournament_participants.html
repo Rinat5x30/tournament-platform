@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block title %}Участники {{ tournament.name }} | Админ-панель{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>👥 Участники: {{ tournament.name }}</h1>
+        <a href="{% url 'admin_panel:tournament_detail' tournament.id %}" class="btn btn-secondary">← Назад</a>
+    </div>
+</div>
+
+<!-- Статистика -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+    <div class="card" style="text-align: center;">
+        <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Зарегистрировано</div>
+        <div style="font-size: 2rem; font-weight: bold; color: var(--accent);">{{ participants.count }}</div>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Максимум</div>
+        <div style="font-size: 2rem; font-weight: bold; color: var(--accent);">{{ tournament.max_teams|default:"∞" }}</div>
+    </div>
+    
+    <div class="card" style="text-align: center;">
+        <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Доступно команд</div>
+        <div style="font-size: 2rem; font-weight: bold; color: #4CAF50;">{{ available_teams.count }}</div>
+    </div>
+</div>
+
+<!-- Форма добавления -->
+<div class="card">
+    <h2 style="color: var(--accent); margin-bottom: 1rem;">➕ Добавить команду</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 1rem; align-items: end;">
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                    Команда <span style="color: #f44336;">*</span>
+                </label>
+                <select name="team" required 
+                        style="width: 100%; padding: 0.75rem; background: var(--secondary-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 1rem;">
+                    <option value="">--- Выберите команду ---</option>
+                    {% for team in available_teams %}
+                    <option value="{{ team.id }}">
+                        {{ team.name }}{% if team.tag %} [{{ team.tag }}]{% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+                {% if not available_teams %}
+                <small style="color: #ff9800; display: block; margin-top: 0.3rem;">
+                    ⚠️ Все команды уже добавлены или нет активных команд
+                </small>
+                {% endif %}
+            </div>
+            
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                    Сид (посев)
+                </label>
+                <input type="number" name="seed" min="1" 
+                       placeholder="Необязательно"
+                       style="width: 100%; padding: 0.75rem; background: var(--secondary-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 1rem;">
+            </div>
+            
+            <button type="submit" class="btn btn-primary" 
+                    style="height: fit-content; padding: 0.75rem 1.5rem;"
+                    {% if not available_teams %}disabled{% endif %}>
+                ➕ Добавить
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Список участников -->
+<div class="card">
+    <h2 style="color: var(--accent); margin-bottom: 1rem;">
+        Список участников ({{ participants.count }})
+    </h2>
+    
+    {% if participants %}
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 60px; text-align: center;">#</th>
+                    <th>Команда</th>
+                    <th style="text-align: center;">Сид</th>
+                    <th style="text-align: center;">Капитан</th>
+                    <th style="text-align: center;">Подтверждение</th>
+                    <th style="text-align: center;">Зарегистрирована</th>
+                    <th style="text-align: center;">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for participant in participants %}
+                <tr>
+                    <td style="text-align: center; font-weight: bold; color: var(--text-secondary);">
+                        {{ forloop.counter }}
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.8rem;">
+                            {% if participant.team.logo %}
+                            <img src="{{ participant.team.logo.url }}" 
+                                 style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;">
+                            {% else %}
+                            <div style="width: 40px; height: 40px; border-radius: 8px; background: var(--secondary-bg); display: flex; align-items: center; justify-content: center;">
+                                👥
+                            </div>
+                            {% endif %}
+                            <div>
+                                <strong>{{ participant.team.name }}</strong>
+                                {% if participant.team.tag %}
+                                <span style="color: var(--text-secondary); font-size: 0.85rem;">
+                                    [{{ participant.team.tag }}]
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="text-align: center;">
+                        {% if participant.seed %}
+                        <span style="background: var(--accent); color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-weight: bold;">
+                            #{{ participant.seed }}
+                        </span>
+                        {% else %}
+                        <span style="color: var(--text-secondary);">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if participant.team.captain %}
+                        <a href="{% url 'accounts:profile' participant.team.captain.username %}" 
+                           style="color: var(--accent); text-decoration: none;">
+                            {{ participant.team.captain.username }}
+                        </a>
+                        {% else %}
+                        <span style="color: var(--text-secondary);">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if participant.is_confirmed %}
+                        <span style="background: #4CAF50; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; color: white;">
+                            ✓ Подтверждено
+                        </span>
+                        {% else %}
+                        <span style="background: #ff9800; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.85rem; color: white;">
+                            ⏳ Ожидает
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center; color: var(--text-secondary);">
+                        {{ participant.registered_at|date:"d.m.Y H:i" }}
+                    </td>
+                    <td style="text-align: center;">
+                        <form method="post" action="{% url 'admin_panel:participant_remove' participant.id %}" 
+                              style="display: inline;" 
+                              onsubmit="return confirm('Удалить {{ participant.team.name }} из турнира?')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn" 
+                                    style="padding: 0.3rem 0.6rem; background: #f44336; color: white; font-size: 0.85rem;">
+                                🗑️
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">😔</div>
+        <h3>Нет участников</h3>
+        <p>Добавьте первую команду, используя форму выше</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Дополнительные действия -->
+{% if participants.count >= 2 %}
+<div class="card">
+    <h3 style="margin-bottom: 1rem;">⚙️ Дополнительные действия</h3>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <a href="{% url 'admin_panel:generate_schedule' tournament.id %}" class="btn btn-primary">
+            📅 Сгенерировать расписание
+        </a>
+        <a href="{% url 'admin_panel:tournament_detail' tournament.id %}" class="btn btn-secondary">
+            ⚽ Создать матчи вручную
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<style>
+select:focus, input:focus {
+    outline: none;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+select {
+    cursor: pointer;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+</style>
+{% endblock %}

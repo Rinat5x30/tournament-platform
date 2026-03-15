@@ -1,0 +1,110 @@
+<!-- templates/ratings/team_ratings.html -->
+{% extends 'base.html' %}
+
+{% block title %}Рейтинг команд | Tournament Platform{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>🏅 Рейтинг команд</h1>
+</div>
+
+<div class="card">
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem;">
+        <div>
+            <label style="margin-right: 0.5rem;">Сезон:</label>
+            <select onchange="window.location.href='?season=' + this.value + '&sort={{ sort }}'" 
+                    style="padding: 0.5rem; border-radius: 5px; background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border);">
+                <option value="">Общий рейтинг</option>
+                {% for season in seasons %}
+                <option value="{{ season.id }}" {% if selected_season == season.id|stringformat:"s" %}selected{% endif %}>
+                    {{ season.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- <div>
+            <label style="margin-right: 0.5rem;">Сортировка:</label>
+            <select onchange="window.location.href='?season={{ selected_season }}&sort=' + this.value" 
+                    style="padding: 0.5rem; border-radius: 5px; background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border);">
+                <option value="points" {% if sort == 'points' %}selected{% endif %}>По очкам</option>
+                <option value="rating_points" {% if sort == 'rating_points' %}selected{% endif %}>По рейтингу</option>
+                <option value="wins" {% if sort == 'wins' %}selected{% endif %}>По победам</option>
+                <option value="goal_difference" {% if sort == 'goal_difference' %}selected{% endif %}>По разнице мячей</option>
+            </select>
+        </div> -->
+    </div>
+    
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th style="text-align: center; width: 60px;">Место</th>
+                    <th>Команда</th>
+                    <th style="text-align: center;">Рейтинг</th>
+                    <th style="text-align: center;">Очки</th>
+                    <th style="text-align: center;">И</th>
+                    <th style="text-align: center;">П</th>
+                    <th style="text-align: center;">Н</th>
+                    <th style="text-align: center;">ПР</th>
+                    <th style="text-align: center;">ЗМ</th>
+                    <th style="text-align: center;">ПМ</th>
+                    <th style="text-align: center;">РМ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rating in ratings %}
+                <tr>
+                    <td class="position">
+                        {% if rating.rank == 1 %}🥇
+                        {% elif rating.rank == 2 %}🥈
+                        {% elif rating.rank == 3 %}🥉
+                        {% else %}{{ rating.rank }}{% endif %}
+                    </td>
+                    <td>
+                        <div class="team-name">
+                            {% if rating.team.logo %}
+                            <img src="{{ rating.team.logo.url }}" class="team-logo" alt="{{ rating.team.name }}">
+                            {% endif %}
+                            
+                            {# ИСПРАВЛЕНО: Проверяем slug перед использованием #}
+                            {% if rating.team.slug %}
+                                <a href="{% url 'teams:team_detail' rating.team.slug %}" style="color: inherit; text-decoration: none;">
+                                    <strong>{{ rating.team.name }}</strong>
+                                </a>
+                            {% else %}
+                                <strong>{{ rating.team.name }}</strong>
+                                <small style="color: var(--text-secondary); font-size: 0.8em;">(нет slug)</small>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td style="text-align: center;"><strong style="color: var(--accent);">{{ rating.rating_points }}</strong></td>
+                    <td style="text-align: center;"><strong>{{ rating.points }}</strong></td>
+                    <td style="text-align: center;">{{ rating.matches_played }}</td>
+                    <td style="text-align: center;">{{ rating.wins }}</td>
+                    <td style="text-align: center;">{{ rating.draws }}</td>
+                    <td style="text-align: center;">{{ rating.losses }}</td>
+                    <td style="text-align: center;">{{ rating.goals_scored }}</td>
+                    <td style="text-align: center;">{{ rating.goals_conceded }}</td>
+                    <td style="text-align: center;">
+                        {% if rating.goal_difference > 0 %}
+                            <span style="color: var(--success);">+{{ rating.goal_difference }}</span>
+                        {% elif rating.goal_difference < 0 %}
+                            <span style="color: var(--danger);">{{ rating.goal_difference }}</span>
+                        {% else %}
+                            0
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="11" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                        Нет данных по рейтингу команд
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,166 @@
+<!-- templates/tournaments/archive.html -->
+{% extends 'base.html' %}
+
+{% block title %}Архив турниров | Tournament Platform{% endblock %}
+
+{% block content %}
+<style>
+    .archive-header {
+        background: linear-gradient(135deg, var(--card-bg) 0%, var(--secondary-bg) 100%);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .tournament-archive-card {
+        background: var(--secondary-bg);
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+        transition: all 0.3s;
+    }
+    
+    .tournament-archive-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--accent);
+        box-shadow: 0 5px 20px rgba(233, 69, 96, 0.2);
+    }
+    
+    .tournament-archive-card img {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .filter-section {
+        background: var(--card-bg);
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+</style>
+
+<div class="archive-header">
+    <h1>📚 Архив турниров</h1>
+    <p style="color: var(--text-secondary); margin-top: 1rem;">
+        История завершенных турниров и достижений
+    </p>
+</div>
+
+<!-- Фильтры -->
+<div class="filter-section">
+    <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem;">Сезон</label>
+            <select name="season" class="form-control">
+                <option value="">Все сезоны</option>
+                {% for season in seasons %}
+                    <option value="{{ season.id }}" {% if selected_season == season.id|stringformat:"s" %}selected{% endif %}>
+                        {{ season.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem;">Год</label>
+            <select name="year" class="form-control">
+                <option value="">Все годы</option>
+                {% for year in years %}
+                    <option value="{{ year.year }}" {% if selected_year == year.year|stringformat:"s" %}selected{% endif %}>
+                        {{ year.year }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem;">Дисциплина (Тип)</label>
+            <select name="stage_type" class="form-control">
+                <option value="">Все типы</option>
+                {% for value, label in stage_types %}
+                    <option value="{{ value }}" {% if selected_stage_type == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div style="display: flex; align-items: end;">
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                🔍 Применить фильтры
+            </button>
+        </div>
+    </form>
+    
+    {% if selected_season or selected_year or selected_stage_type %}
+    <div style="margin-top: 1rem;">
+        <a href="{% url 'tournaments:archive' %}" class="btn btn-secondary">
+            ✖ Сбросить фильтры
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Список турниров -->
+{% if tournaments %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+        {% for tournament in tournaments %}
+            <div class="tournament-archive-card">
+                {% if tournament.logo %}
+                    <img src="{{ tournament.logo.url }}" alt="{{ tournament.name }}">
+                {% else %}
+                    <div style="width: 100%; aspect-ratio: 1/1; background: var(--card-bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 1rem;">
+                        🏆
+                    </div>
+                {% endif %}
+                
+                <h3 style="margin-bottom: 0.5rem;">{{ tournament.name }}</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">
+                    {{ tournament.season.name }}
+                </p>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
+                    {{ tournament.get_stage_type_display }}
+                </p>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem; text-align: center;">
+                    <div>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent);">
+                            {{ tournament.teams_count }}
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Команд</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent);">
+                            {{ tournament.matches_count }}
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Матчей</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent);">
+                            {{ tournament.start_date|date:"M Y" }}
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Дата</div>
+                    </div>
+                </div>
+                
+                <a href="{% url 'tournaments:tournament_detail' tournament.slug %}" class="btn btn-primary" style="width: 100%;">
+                    Подробнее
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card" style="text-align: center; padding: 3rem;">
+        <div style="font-size: 5rem; margin-bottom: 1rem;">📚</div>
+        <h3 style="margin-bottom: 0.5rem;">Турниры не найдены</h3>
+        <p style="color: var(--text-secondary);">
+            Попробуйте изменить параметры фильтрации
+        </p>
+    </div>
+{% endif %}
+{% endblock %}

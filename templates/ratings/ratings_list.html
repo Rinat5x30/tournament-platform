@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if rating_type == 'player' %}
+        Рейтинг игроков
+    {% else %}
+        Рейтинг команд
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>
+                {% if rating_type == 'player' %}
+                    Рейтинг игроков
+                {% else %}
+                    Рейтинг команд
+                {% endif %}
+            </h1>
+            
+            <!-- Навигация между рейтингами -->
+            <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                    <a class="nav-link {% if rating_type == 'team' %}active{% endif %}" 
+                       href="{% url 'ratings:team_ratings' %}">
+                        Рейтинг команд
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if rating_type == 'player' %}active{% endif %}" 
+                       href="{% url 'ratings:player_ratings' %}">
+                        Рейтинг игроков
+                    </a>
+                </li>
+            </ul>
+            
+            <!-- Фильтры -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="season" class="form-label">Сезон</label>
+                            <select name="season" id="season" class="form-select" onchange="this.form.submit()">
+                                <option value="">Общий рейтинг</option>
+                                {% for season in seasons %}
+                                    <option value="{{ season.id }}" 
+                                            {% if selected_season == season.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ season.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        {% if rating_type == 'player' %}
+                        <div class="col-md-6">
+                            <label for="search" class="form-label">Поиск игрока</label>
+                            <div class="input-group">
+                                <input type="text" name="search" id="search" 
+                                       class="form-control" 
+                                       placeholder="Введите имя игрока..."
+                                       value="{{ search }}">
+                                <button type="submit" class="btn btn-primary">Найти</button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Таблица рейтингов -->
+            <div class="card">
+                <div class="card-body">
+                    {% if ratings %}
+                        <div class="table-responsive">
+                            {% if rating_type == 'team' %}
+                                <!-- Рейтинг команд -->
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Команда</th>
+                                            <th>Рейтинг</th>
+                                            <th>Матчи</th>
+                                            <th>П</th>
+                                            <th>Н</th>
+                                            <th>Пр</th>
+                                            <th>Голы</th>
+                                            <th>Разница</th>
+                                            <th>Очки</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for rating in ratings %}
+                                        <tr>
+                                            <td><strong>{{ forloop.counter }}</strong></td>
+                                            <td>
+                                                <a href="{% url 'teams:team_detail' rating.team.slug %}">
+                                                    {{ rating.team.name }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary">{{ rating.rating_points }}</span>
+                                            </td>
+                                            <td>{{ rating.matches_played }}</td>
+                                            <td class="text-success">{{ rating.wins }}</td>
+                                            <td class="text-warning">{{ rating.draws }}</td>
+                                            <td class="text-danger">{{ rating.losses }}</td>
+                                            <td>{{ rating.goals_scored }}:{{ rating.goals_conceded }}</td>
+                                            <td>
+                                                {% if rating.goal_difference > 0 %}
+                                                    <span class="text-success">+{{ rating.goal_difference }}</span>
+                                                {% elif rating.goal_difference < 0 %}
+                                                    <span class="text-danger">{{ rating.goal_difference }}</span>
+                                                {% else %}
+                                                    0
+                                                {% endif %}
+                                            </td>
+                                            <td><strong>{{ rating.points }}</strong></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% else %}
+                                <!-- Рейтинг игроков -->
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Игрок</th>
+                                            <th>Рейтинг</th>
+                                            <th>Матчи</th>
+                                            <th>П</th>
+                                            <th>Н</th>
+                                            <th>Пр</th>
+                                            <th>Голы</th>
+                                            <th>Передачи</th>
+                                            <th>Сейвы</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for rating in ratings %}
+                                        <tr>
+                                            <td><strong>{{ forloop.counter }}</strong></td>
+                                            <td>
+                                                <a href="{% url 'accounts:profile' rating.player.username %}">
+                                                    {{ rating.player.username }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary">{{ rating.rating_points }}</span>
+                                            </td>
+                                            <td>{{ rating.matches_played }}</td>
+                                            <td class="text-success">{{ rating.wins }}</td>
+                                            <td class="text-warning">{{ rating.draws }}</td>
+                                            <td class="text-danger">{{ rating.losses }}</td>
+                                            <td><strong>{{ rating.goals }}</strong></td>
+                                            <td>{{ rating.assists }}</td>
+                                            <td>{{ rating.saves }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <p class="mb-0">
+                                {% if search %}
+                                    По запросу "{{ search }}" ничего не найдено
+                                {% else %}
+                                    Рейтинг пока пуст. Сыграйте несколько матчей!
+                                {% endif %}
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

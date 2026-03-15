@@ -1,0 +1,45 @@
+<!-- templates/admin_panel/team_delete_confirm.html -->
+{% extends 'base.html' %}
+
+{% block title %}Удаление команды | Админ-панель{% endblock %}
+
+{% block content %}
+<div class="card" style="border-left: 4px solid #f44336;">
+    <h1 style="color: #f44336;">⚠️ Подтверждение удаления</h1>
+</div>
+
+<div class="card">
+    <h2>Вы уверены, что хотите удалить команду?</h2>
+    
+    <div style="background: var(--card-bg); padding: 1.5rem; border-radius: 8px; margin: 1.5rem 0; display: flex; align-items: center; gap: 1rem;">
+        {% if team.logo %}
+        <img src="{{ team.logo.url }}" style="width: 80px; height: 80px; border-radius: 10px;" alt="{{ team.name }}">
+        {% endif %}
+        <div>
+            <h3 style="margin-bottom: 0.5rem;">{{ team.name }}</h3>
+            <p style="color: var(--text-secondary);">Капитан: {{ team.captain.username }}</p>
+        </div>
+    </div>
+    
+    <div style="background: #fee; border-left: 4px solid #f44336; padding: 1rem; margin-bottom: 1.5rem;">
+        <h4 style="color: #c33; margin-bottom: 0.5rem;">⚠️ Внимание!</h4>
+        <p style="color: #c33; margin-bottom: 0.5rem;">Это действие нельзя отменить. Будут удалены:</p>
+        <ul style="color: #c33; margin-left: 1.5rem;">
+            <li>{{ members_count }} игроков из состава</li>
+            <li>{{ matches_count }} матчей</li>
+            <li>{{ tournaments_count }} участий в турнирах</li>
+            <li>Вся статистика команды</li>
+        </ul>
+    </div>
+    
+    <form method="post" style="display: flex; gap: 1rem;">
+        {% csrf_token %}
+        <button type="submit" class="btn" style="background: #f44336; color: white;">
+            🗑️ Да, удалить команду
+        </button>
+        <a href="{% url 'admin_panel:team_detail' team.id %}" class="btn btn-secondary">
+            Отмена
+        </a>
+    </form>
+</div>
+{% endblock %}

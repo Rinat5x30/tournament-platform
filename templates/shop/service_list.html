@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block title %}Каталог услуг{% endblock %}
+
+{% block extra_css %}
+<style>
+    .shop-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px 40px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .shop-header h1 { font-size: 1.8rem; margin: 0 0 8px; }
+    .shop-header .breadcrumb { opacity: 0.8; font-size: 14px; }
+    .shop-header .breadcrumb a { color: white; text-decoration: none; }
+    
+    .content-grid { display: grid; grid-template-columns: 220px 1fr; gap: 24px; }
+    
+    .filters-card {
+        background: var(--secondary-bg);
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid var(--border);
+        position: sticky;
+        top: 100px;
+        height: fit-content;
+    }
+    
+    .filter-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #667eea;
+    }
+    
+    .filter-group { margin-bottom: 20px; }
+    .filter-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 10px; display: block; }
+    
+    .filter-btn {
+        display: block;
+        width: 100%;
+        padding: 10px 14px;
+        margin-bottom: 6px;
+        background: var(--card-bg);
+        border: none;
+        border-radius: 8px;
+        text-align: left;
+        color: var(--text-primary);
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+    
+    .filter-btn:hover { background: var(--border); }
+    .filter-btn.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+    
+    .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    
+    .service-card {
+        background: var(--secondary-bg);
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid var(--border);
+        transition: all 0.3s;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .service-card:hover { transform: translateY(-4px); border-color: #667eea; }
+    
+    .service-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    
+    .badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+    
+    .badge-featured { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+    .badge-auto { background: rgba(76,175,80,0.2); color: #4CAF50; }
+    .badge-manual { background: rgba(255,152,0,0.2); color: #ff9800; }
+    .badge-category { background: rgba(33,150,243,0.15); color: #1565c0; }
+    
+    .service-card h3 { color: var(--text-primary); font-size: 1.05rem; margin: 0 0 8px; }
+    .service-card p { color: var(--text-secondary); font-size: 13px; line-height: 1.5; flex-grow: 1; margin: 0 0 12px; }
+    
+    .service-limits {
+        background: var(--card-bg);
+        border-radius: 6px;
+        padding: 10px;
+        margin-bottom: 12px;
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+    
+    .service-limits span { display: block; margin: 2px 0; }
+    
+    .service-btn {
+        display: block;
+        padding: 10px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        text-align: center;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .service-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(102,126,234,0.4); }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: var(--secondary-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        grid-column: 1 / -1;
+    }
+    
+    .empty-state .icon { font-size: 4rem; margin-bottom: 16px; opacity: 0.5; }
+    .empty-state h3 { color: var(--text-primary); margin-bottom: 8px; }
+    .empty-state p { color: var(--text-secondary); margin-bottom: 20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="shop-header">
+    <h1>📋 Каталог услуг</h1>
+    <div class="breadcrumb"><a href="{% url 'shop:index' %}">Магазин</a> / Услуги</div>
+</div>
+
+<div class="content-grid">
+    <aside class="filters-card">
+        <div class="filter-title">🔍 Фильтры</div>
+        
+        <div class="filter-group">
+            <span class="filter-label">Категория</span>
+            <a href="{% url 'shop:service_list' %}{% if current_type %}?type={{ current_type }}{% endif %}" class="filter-btn {% if not current_category %}active{% endif %}">Все</a>
+            {% for category in categories %}
+            <a href="?category={{ category.slug }}{% if current_type %}&type={{ current_type }}{% endif %}" class="filter-btn {% if current_category == category.slug %}active{% endif %}">
+                {% if category.category_type == 'league' %}🏆{% elif category.category_type == 'server' %}🖥️{% else %}📁{% endif %} {{ category.name }}
+            </a>
+            {% endfor %}
+        </div>
+        
+        <div class="filter-group">
+            <span class="filter-label">Тип</span>
+            <a href="{% url 'shop:service_list' %}{% if current_category %}?category={{ current_category }}{% endif %}" class="filter-btn {% if not current_type %}active{% endif %}">Все</a>
+            <a href="?type=auto{% if current_category %}&category={{ current_category }}{% endif %}" class="filter-btn {% if current_type == 'auto' %}active{% endif %}">⚡ Авто</a>
+            <a href="?type=manual{% if current_category %}&category={{ current_category }}{% endif %}" class="filter-btn {% if current_type == 'manual' %}active{% endif %}">👤 Ручные</a>
+        </div>
+    </aside>
+    
+    <main>
+        {% if services %}
+        <div class="services-grid">
+            {% for service in services %}
+            <div class="service-card">
+                <div class="service-badges">
+                    {% if service.is_featured %}<span class="badge badge-featured">⭐ Рекомендуем</span>{% endif %}
+                    {% if service.processing_type == 'auto' %}
+                        <span class="badge badge-auto">⚡ Авто</span>
+                    {% else %}
+                        <span class="badge badge-manual">👤 Ручная</span>
+                    {% endif %}
+                    <span class="badge badge-category">{{ service.category.name }}</span>
+                </div>
+                
+                <h3>{{ service.name }}</h3>
+                <p>{{ service.description|truncatewords:20 }}</p>
+                
+                {% if service.max_uses_per_user or service.cooldown_days %}
+                <div class="service-limits">
+                    {% if service.max_uses_per_user %}<span>📊 Лимит: {{ service.max_uses_per_user }} раз</span>{% endif %}
+                    {% if service.cooldown_days %}<span>⏱️ Ожидание: {{ service.cooldown_days }} дней</span>{% endif %}
+                </div>
+                {% endif %}
+                
+                <a href="{% url 'shop:service_detail' service.id %}" class="service-btn">Подробнее</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="icon">🔍</div>
+            <h3>Услуги не найдены</h3>
+            <p>Попробуйте изменить фильтры</p>
+            <a href="{% url 'shop:service_list' %}" class="service-btn" style="display:inline-block;padding:12px 24px">Сбросить</a>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

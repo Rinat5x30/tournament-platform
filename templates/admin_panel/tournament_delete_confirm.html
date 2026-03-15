@@ -1,0 +1,40 @@
+<!-- templates/admin_panel/tournament_delete_confirm.html -->
+{% extends 'base.html' %}
+
+{% block title %}Удаление турнира | Админ-панель{% endblock %}
+
+{% block content %}
+<div class="card" style="border-left: 4px solid #f44336;">
+    <h1 style="color: #f44336;">⚠️ Подтверждение удаления</h1>
+</div>
+
+<div class="card">
+    <h2>Вы уверены, что хотите удалить турнир?</h2>
+    
+    <div style="background: var(--card-bg); padding: 1.5rem; border-radius: 8px; margin: 1.5rem 0;">
+        <h3 style="margin-bottom: 1rem;">{{ tournament.name }}</h3>
+        <p style="color: var(--text-secondary);">{{ tournament.season.name }}</p>
+    </div>
+    
+    <div style="background: #fee; border-left: 4px solid #f44336; padding: 1rem; margin-bottom: 1.5rem;">
+        <h4 style="color: #c33; margin-bottom: 0.5rem;">⚠️ Внимание!</h4>
+        <p style="color: #c33; margin-bottom: 0.5rem;">Это действие нельзя отменить. Будут удалены:</p>
+        <ul style="color: #c33; margin-left: 1.5rem;">
+            <li>{{ matches_count }} матчей</li>
+            <li>{{ participants_count }} записей участников</li>
+            <li>Все стадии и таблицы</li>
+            <li>Вся статистика турнира</li>
+        </ul>
+    </div>
+    
+    <form method="post" style="display: flex; gap: 1rem;">
+        {% csrf_token %}
+        <button type="submit" class="btn" style="background: #f44336; color: white;">
+            🗑️ Да, удалить турнир
+        </button>
+        <a href="{% url 'admin_panel:tournament_detail' tournament.id %}" class="btn btn-secondary">
+            Отмена
+        </a>
+    </form>
+</div>
+{% endblock %}

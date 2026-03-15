@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if team %}Редактирование{% else %}Создание{% endif %} команды - Админ-панель{% endblock %}
+
+{% block content %}
+<style>
+    /* Убираем grid layout для страниц с формами */
+    .container {
+        display: block !important;
+        max-width: 1000px !important;
+    }
+    
+    .sidebar {
+        display: none !important;
+    }
+</style>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>{% if team %}✏️ Редактирование команды{% else %}➕ Создание новой команды{% endif %}</h1>
+        <a href="{% url 'admin_panel:team_list' %}" class="btn btn-secondary">← Назад к списку</a>
+    </div>
+</div>
+
+<div class="card">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        {% if form.errors %}
+            <div style="background: #f44336; color: white; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <strong>Ошибки в форме:</strong>
+                <ul style="margin: 0.5rem 0 0 1.5rem;">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ field }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        
+        <div class="form-group">
+            {{ form.name.label_tag }}
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div style="color: #f44336; margin-top: 0.5rem;">{{ form.name.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                {{ form.slug.label_tag }}
+                {{ form.slug }}
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.3rem;">
+                    URL-адрес команды (только латинские буквы, цифры и дефисы). Оставьте пустым для автогенерации.
+                </small>
+                {% if form.slug.errors %}
+                    <div style="color: #f44336; margin-top: 0.5rem;">{{ form.slug.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.tag.label_tag }}
+                {{ form.tag }}
+                <small style="color: var(--text-secondary); display: block; margin-top: 0.3rem;">
+                    2-5 символов
+                </small>
+                {% if form.tag.errors %}
+                    <div style="color: #f44336; margin-top: 0.5rem;">{{ form.tag.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-group">
+            {{ form.logo.label_tag }}
+            {{ form.logo }}
+            {% if team and team.logo %}
+                <div style="margin-top: 1rem;">
+                    <img src="{{ team.logo.url }}" alt="Текущий логотип" 
+                         style="max-width: 200px; border-radius: 8px; border: 2px solid var(--border);">
+                </div>
+            {% endif %}
+            {% if form.logo.errors %}
+                <div style="color: #f44336; margin-top: 0.5rem;">{{ form.logo.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                {{ form.captain.label_tag }}
+                {{ form.captain }}
+                {% if form.captain.errors %}
+                    <div style="color: #f44336; margin-top: 0.5rem;">{{ form.captain.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.founded_date.label_tag }}
+                {{ form.founded_date }}
+                {% if form.founded_date.errors %}
+                    <div style="color: #f44336; margin-top: 0.5rem;">{{ form.founded_date.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-group">
+            {{ form.description.label_tag }}
+            {{ form.description }}
+            {% if form.description.errors %}
+                <div style="color: #f44336; margin-top: 0.5rem;">{{ form.description.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label style="display: flex; align-items: center; cursor: pointer;">
+                {{ form.is_active }}
+                <span style="margin-left: 0.5rem;">Команда активна</span>
+            </label>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 2rem; border-top: 2px solid var(--border);">
+            <button type="submit" class="btn btn-primary">
+                {% if team %}💾 Сохранить изменения{% else %}➕ Создать команду{% endif %}
+            </button>
+            <a href="{% url 'admin_panel:team_list' %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="background: var(--card-bg); border-left: 4px solid #2196F3;">
+    <h3>💡 Совет</h3>
+    <p style="color: var(--text-secondary);">
+        После создания команды вы сможете добавить игроков в её состав. 
+        Капитан команды может управлять заявками на турниры и составом через свой профиль.
+    </p>
+</div>
+{% endblock %}
+
+{% block left_sidebar %}{% endblock %}
+{% block right_sidebar %}{% endblock %}

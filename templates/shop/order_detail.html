@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}Заказ #{{ order.id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-page { max-width: 1000px; margin: 0 auto; }
+    
+    .back-link { display: inline-flex; align-items: center; gap: 8px; color: #667eea; text-decoration: none; margin-bottom: 20px; font-weight: 500; }
+    .back-link:hover { color: #764ba2; }
+    
+    .order-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+    .order-header h1 { color: var(--text-primary); font-size: 1.6rem; margin: 0 0 6px; }
+    .order-header .meta { color: var(--text-secondary); font-size: 14px; }
+    
+    .status-badge { padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; }
+    .status-pending { background: rgba(255,152,0,0.15); color: #e65100; }
+    .status-processing { background: rgba(33,150,243,0.15); color: #1565c0; }
+    .status-completed { background: rgba(76,175,80,0.15); color: #2e7d32; }
+    .status-rejected { background: rgba(244,67,54,0.15); color: #c62828; }
+    .status-cancelled { background: var(--card-bg); color: var(--text-secondary); }
+    
+    .content-grid { display: grid; grid-template-columns: 1fr 300px; gap: 24px; }
+    
+    .card {
+        background: var(--secondary-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .card-header { padding: 16px 20px; background: var(--card-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .card-header h2 { font-size: 1rem; color: var(--text-primary); margin: 0; }
+    .card-body { padding: 20px; }
+    
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .info-item .label { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; }
+    .info-item .value { color: var(--text-primary); font-weight: 500; }
+    .info-item .value.highlight { color: #667eea; }
+    
+    .order-data { background: var(--card-bg); border-radius: 8px; padding: 14px; font-family: monospace; font-size: 13px; color: var(--text-primary); }
+    
+    .result-box { border-radius: 10px; padding: 16px; }
+    .result-box.success { background: rgba(76,175,80,0.1); border: 1px solid rgba(76,175,80,0.3); }
+    .result-box.error { background: rgba(244,67,54,0.1); border: 1px solid rgba(244,67,54,0.3); }
+    .result-box .title { font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .result-box.success .title { color: #2e7d32; }
+    .result-box.error .title { color: #c62828; }
+    .result-box .text { font-size: 14px; }
+    .result-box.success .text { color: #33691e; }
+    .result-box.error .text { color: #b71c1c; }
+    
+    .admin-note { background: rgba(255,193,7,0.1); border-radius: 10px; padding: 14px; border-left: 4px solid #ffc107; }
+    .admin-note .label { font-size: 13px; color: #ff8f00; font-weight: 600; margin-bottom: 6px; }
+    .admin-note .text { color: var(--text-primary); font-size: 14px; }
+    
+    .timeline { padding-left: 24px; position: relative; }
+    .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+    .timeline-item { position: relative; padding-bottom: 16px; }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-dot { position: absolute; left: -20px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: #667eea; }
+    .timeline-dot.success { background: #4caf50; }
+    .timeline-dot.error { background: #f44336; }
+    .timeline-content { background: var(--card-bg); border-radius: 8px; padding: 12px; }
+    .timeline-action { font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .timeline-meta { font-size: 12px; color: var(--text-secondary); }
+    
+    .sidebar { display: flex; flex-direction: column; gap: 20px; }
+    
+    .service-card { display: flex; gap: 12px; padding: 14px; background: var(--card-bg); border-radius: 10px; }
+    .service-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+    .service-icon.auto { background: linear-gradient(135deg, #11998e, #38ef7d); }
+    .service-icon.manual { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .service-info h3 { color: var(--text-primary); font-size: 14px; margin: 0 0 4px; }
+    .service-info .category { color: var(--text-secondary); font-size: 13px; }
+    
+    .ticket-link {
+        display: block;
+        padding: 16px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 10px;
+        color: white;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    
+    .ticket-link:hover { transform: translateY(-2px); }
+    .ticket-link .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .ticket-link .title { font-weight: 600; }
+    .ticket-link .info { font-size: 13px; opacity: 0.9; }
+    
+    .btn {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        text-decoration: none;
+        text-align: center;
+        font-weight: 500;
+        transition: all 0.3s;
+        margin-bottom: 10px;
+    }
+    
+    .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+    .btn-outline { background: transparent; border: 1px solid #667eea; color: #667eea; }
+    .btn:last-child { margin-bottom: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="order-page">
+    <a href="{% url 'shop:my_orders' %}" class="back-link">← К заказам</a>
+    
+    <div class="order-header">
+        <div>
+            <h1>{{ order.service.name }}</h1>
+            <div class="meta">Заказ #{{ order.id }} от {{ order.created_at|date:"d.m.Y H:i" }}</div>
+        </div>
+        <span class="status-badge status-{{ order.status }}">
+            {% if order.status == 'pending' %}⏳ Ожидает{% elif order.status == 'processing' %}🔄 В работе{% elif order.status == 'completed' %}✅ Выполнено{% elif order.status == 'rejected' %}❌ Отклонено{% else %}🚫 Отменено{% endif %}
+        </span>
+    </div>
+    
+    <div class="content-grid">
+        <main>
+            <div class="card">
+                <div class="card-header"><span>📋</span><h2>Информация</h2></div>
+                <div class="card-body">
+                    <div class="info-grid">
+                        <div class="info-item"><div class="label">Дата создания</div><div class="value">{{ order.created_at|date:"d.m.Y H:i" }}</div></div>
+                        <div class="info-item"><div class="label">Категория</div><div class="value">{{ order.service.category.name }}</div></div>
+                        <div class="info-item"><div class="label">Тип</div><div class="value {% if order.service.is_auto_process %}highlight{% endif %}">{% if order.service.is_auto_process %}⚡ Авто{% else %}👤 Ручная{% endif %}</div></div>
+                        {% if order.completed_at %}<div class="info-item"><div class="label">Завершён</div><div class="value">{{ order.completed_at|date:"d.m.Y H:i" }}</div></div>{% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            {% if order.order_data %}
+            <div class="card">
+                <div class="card-header"><span>📝</span><h2>Данные заказа</h2></div>
+                <div class="card-body">
+                    <div class="order-data">{% for key, value in order.order_data.items %}{{ key }}: {{ value }}<br>{% endfor %}</div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if order.status == 'completed' %}
+            <div class="card">
+                <div class="card-header"><span>✅</span><h2>Результат</h2></div>
+                <div class="card-body">
+                    <div class="result-box success">
+                        <div class="title">✓ Выполнено</div>
+                        {% if order.result_data.message %}<div class="text">{{ order.result_data.message }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+            {% elif order.status == 'rejected' %}
+            <div class="card">
+                <div class="card-header"><span>❌</span><h2>Причина отклонения</h2></div>
+                <div class="card-body">
+                    <div class="result-box error">
+                        <div class="title">✗ Отклонён</div>
+                        <div class="text">{{ order.admin_notes|default:"Причина не указана" }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if order.admin_notes and order.status != 'rejected' %}
+            <div class="card">
+                <div class="card-header"><span>💬</span><h2>Примечание</h2></div>
+                <div class="card-body">
+                    <div class="admin-note">
+                        <div class="label">Комментарий</div>
+                        <div class="text">{{ order.admin_notes }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if logs %}
+            <div class="card">
+                <div class="card-header"><span>📜</span><h2>История</h2></div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% for log in logs %}
+                        <div class="timeline-item">
+                            <div class="timeline-dot {% if log.action == 'complete' %}success{% elif log.action == 'reject' %}error{% endif %}"></div>
+                            <div class="timeline-content">
+                                <div class="timeline-action">
+                                    {% if log.action == 'create' %}📝 Создан{% elif log.action == 'complete' %}✅ Выполнен{% elif log.action == 'reject' %}❌ Отклонён{% else %}{{ log.action }}{% endif %}
+                                </div>
+                                <div class="timeline-meta">{{ log.created_at|date:"d.m.Y H:i" }}{% if log.performed_by %} • {{ log.performed_by.username }}{% endif %}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </main>
+        
+        <aside class="sidebar">
+            <div class="card">
+                <div class="card-header"><span>🛒</span><h2>Услуга</h2></div>
+                <div class="card-body">
+                    <div class="service-card">
+                        <div class="service-icon {% if order.service.is_auto_process %}auto{% else %}manual{% endif %}">{% if order.service.is_auto_process %}⚡{% else %}👤{% endif %}</div>
+                        <div class="service-info">
+                            <h3>{{ order.service.name }}</h3>
+                            <div class="category">{{ order.service.category.name }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if order.ticket %}
+            <a href="{% url 'shop:ticket_detail' order.ticket.id %}" class="ticket-link">
+                <div class="header"><span class="title">🎫 Тикет #{{ order.ticket.id }}</span><span>→</span></div>
+                <div class="info">Статус: {{ order.ticket.get_status_display }}</div>
+            </a>
+            {% endif %}
+            
+            <div class="card">
+                <div class="card-body">
+                    <a href="{% url 'shop:service_detail' order.service.id %}" class="btn btn-outline">📄 Страница услуги</a>
+                    {% if order.status == 'pending' or order.status == 'rejected' %}<a href="{% url 'shop:service_request' order.service.id %}" class="btn btn-primary">🔄 Заказать снова</a>{% endif %}
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,168 @@
+
+<!-- templates/tournaments/tournament_bracket.html -->
+{% extends 'base.html' %}
+
+{% block title %}Сетка плей-офф {{ tournament.name }} | Tournament Platform{% endblock %}
+
+{% block content %}
+<style>
+    .bracket-container {
+        overflow-x: auto;
+        padding: 2rem 0;
+    }
+    
+    .bracket {
+        display: flex;
+        gap: 3rem;
+        min-width: max-content;
+    }
+    
+    .bracket-round {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        min-width: 220px;
+    }
+    
+    .bracket-round-title {
+        text-align: center;
+        font-weight: bold;
+        color: var(--accent);
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    }
+    
+    .bracket-match {
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 0;
+        margin: 1rem 0;
+        border: 2px solid var(--border);
+        overflow: hidden;
+    }
+    
+    .bracket-team {
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        transition: background 0.2s;
+    }
+    
+    .bracket-team:hover {
+        background: rgba(233, 69, 96, 0.1);
+    }
+    
+    .bracket-team:not(:last-child) {
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .bracket-team.winner {
+        background: rgba(233, 69, 96, 0.2);
+        font-weight: bold;
+    }
+    
+    .bracket-team-name {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+    }
+    
+    .bracket-score {
+        font-size: 1.3rem;
+        font-weight: bold;
+        min-width: 30px;
+        text-align: center;
+    }
+    
+    .bracket-match-info {
+        background: var(--secondary-bg);
+        padding: 0.5rem;
+        text-align: center;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+</style>
+
+<div class="card">
+    <h1>Сетка плей-офф: {{ tournament.name }}</h1>
+    <p style="color: var(--text-secondary);">{{ tournament.season.name }}</p>
+</div>
+
+<div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+    <a href="{% url 'tournaments:tournament_detail' tournament.slug %}" class="btn btn-secondary">Обзор</a>
+    <a href="{% url 'tournaments:tournament_table' tournament.slug %}" class="btn btn-secondary">Таблица</a>
+    <a href="{% url 'tournaments:tournament_schedule' tournament.slug %}" class="btn btn-secondary">Расписание</a>
+    <a href="{% url 'tournaments:tournament_bracket' tournament.slug %}" class="btn btn-primary">Сетка</a>
+</div>
+
+{% if error %}
+<div class="card">
+    <p style="color: var(--text-secondary); text-align: center;">{{ error }}</p>
+</div>
+{% else %}
+<div class="card">
+    <h2 class="card-title">{{ stage.name }}</h2>
+    
+    <div class="bracket-container">
+        <div class="bracket">
+            {% for round_num, matches in rounds.items %}
+            <div class="bracket-round">
+                <div class="bracket-round-title">
+                    {% if round_num == 1 %}
+                        1/{{ matches|length|add:matches|length }}
+                    {% elif round_num == rounds|length|add:-1 %}
+                        Полуфинал
+                    {% elif round_num == rounds|length %}
+                        Финал
+                    {% else %}
+                        Раунд {{ round_num }}
+                    {% endif %}
+                </div>
+                
+                {% for match in matches %}
+                <div class="bracket-match">
+                    <div class="bracket-team {% if match.status == 'finished' and match.score_team1 > match.score_team2 %}winner{% endif %}">
+                        <div class="bracket-team-name">
+                            {% if match.team1.logo %}
+                            <img src="{{ match.team1.logo.url }}" style="width: 25px; height: 25px; border-radius: 5px;" alt="{{ match.team1.name }}">
+                            {% endif %}
+                            <span>{{ match.team1.name }}</span>
+                        </div>
+                        {% if match.status == 'finished' %}
+                        <span class="bracket-score">{{ match.score_team1 }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="bracket-team {% if match.status == 'finished' and match.score_team2 > match.score_team1 %}winner{% endif %}">
+                        <div class="bracket-team-name">
+                            {% if match.team2.logo %}
+                            <img src="{{ match.team2.logo.url }}" style="width: 25px; height: 25px; border-radius: 5px;" alt="{{ match.team2.name }}">
+                            {% endif %}
+                            <span>{{ match.team2.name }}</span>
+                        </div>
+                        {% if match.status == 'finished' %}
+                        <span class="bracket-score">{{ match.score_team2 }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="bracket-match-info">
+                        {% if match.status == 'finished' %}
+                            {{ match.actual_end_time|date:"d.m.Y" }}
+                        {% elif match.status == 'live' %}
+                            🔴 Идёт сейчас
+                        {% else %}
+                            {{ match.scheduled_time|date:"d.m.Y" }}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
